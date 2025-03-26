@@ -13,17 +13,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool isLoading = false;
   bool showPassword = false;
 
+  bool isValidGmail(String email) {
+    RegExp gmailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@gmail\.com\$');
+    return gmailRegex.hasMatch(email);
+  }
+
   Future<void> register() async {
-    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Please enter email and password"), backgroundColor: Colors.red),
       );
       return;
     }
 
+    if (!isValidGmail(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please enter a valid Gmail address"), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('email', emailController.text);
-    await prefs.setString('password', passwordController.text);
+    await prefs.setString('email', email);
+    await prefs.setString('password', password);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("Account created successfully!"), backgroundColor: Colors.green),
