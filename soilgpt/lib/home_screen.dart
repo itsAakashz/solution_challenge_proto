@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
+import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -18,32 +20,53 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController rainfallController = TextEditingController();
 
   String recommendedCrop = "";
+  bool isLoading = false;
 
   Future<void> getCropRecommendation() async {
+    setState(() {
+      isLoading = true;
+    });
+
     final url = Uri.parse("http://YOUR_FLASK_SERVER_IP:5000/predict");
 
-    final response = await http.post(
-      url,
-      body: {
-        'Nitrogen': nitrogenController.text,
-        'Phosphorus': phosphorusController.text,
-        'Potassium': potassiumController.text,
-        'Temperature': temperatureController.text,
-        'Humidity': humidityController.text,
-        'Ph': phController.text,
-        'Rainfall': rainfallController.text,
-      },
-    );
+    try {
+      final response = await http.post(
+        url,
+        body: {
+          'Nitrogen': nitrogenController.text,
+          'Phosphorus': phosphorusController.text,
+          'Potassium': potassiumController.text,
+          'Temperature': temperatureController.text,
+          'Humidity': humidityController.text,
+          'Ph': phController.text,
+          'Rainfall': rainfallController.text,
+        },
+      );
 
-    if (response.statusCode == 200) {
+      if (response.statusCode == 200) {
+        setState(() {
+          recommendedCrop = jsonDecode(response.body)['result'];
+        });
+      } else {
+        setState(() {
+          recommendedCrop = "Error: Could not get recommendation.";
+        });
+      }
+    } catch (e) {
       setState(() {
-        recommendedCrop = jsonDecode(response.body)['result'];
+        recommendedCrop = "Error: ${e.toString()}";
       });
-    } else {
+    } finally {
       setState(() {
-        recommendedCrop = "Error: Could not get recommendation.";
+        isLoading = false;
       });
     }
+  }
+
+  Future<void> logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', false);
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginScreen()));
   }
 
   @override
@@ -53,108 +76,87 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text("SOIL GPT"),
         backgroundColor: Colors.green[700],
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: logout,
+          ),
+        ],
       ),
-      drawer: Drawer(  // <-- Added Hamburger Menu
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage("assets/images/img.jpg"),  // Make sure this image exists
-                  fit: BoxFit.cover,  // Cover the full header area
-                ),
-              ),
-              child: Container(
-                padding: EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),  // Dark overlay for text visibility
-                  borderRadius: BorderRadius.circular(10),
-                ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
                 child: Text(
-                  "🌱 SOIL GPT",
+                  "Enter Soil & Weather Conditions",
                   style: GoogleFonts.poppins(
-                    fontSize: 22,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green[800],
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ),
-            ),
+              SizedBox(height: 10),
+              _buildTextField(nitrogenController, "Nitrogen (N)"),
+              _buildTextField(phosphorusController, "Phosphorus (P)"),
+              _buildTextField(potassiumController, "Potassium (K)"),
+              _buildTextField(temperatureController, "Temperature (°C)"),
+              _buildTextField(humidityController, "Humidity (%)"),
+              _buildTextField(phController, "pH Level"),
+              _buildTextField(rainfallController, "Rainfall (mm)"),
+              SizedBox(height: 20),
 
-            ListTile(
-              leading: Icon(Icons.home, color: Colors.green),
-              title: Text("Home"),
-              onTap: () {
-                Navigator.pop(context); // Close drawer
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.dirty_lens_rounded, color: Colors.orange),
-              title: Text("Soil Lens"),
-              onTap: () {
-                Navigator.pop(context);
-                _showDialog(context, "Contact", "Email: support@cropai.com\nPhone: +123 456 7890");
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.info, color: Colors.blue),
-              title: Text("About"),
-              onTap: () {
-                Navigator.pop(context);
-                _showDialog(context, "About", "This app recommends crops based on soil and climate conditions.");
-              },
-            ),
-          ],
-        ),
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text(
-              "Enter Soil & Weather Conditions",
-              style: GoogleFonts.poppins(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.green[800],
-              ),
-            ),
-            SizedBox(height: 10),
-            _buildTextField(nitrogenController, "Nitrogen (N)"),
-            _buildTextField(phosphorusController, "Phosphorus (P)"),
-            _buildTextField(potassiumController, "Potassium (K)"),
-            _buildTextField(temperatureController, "Temperature (°C)"),
-            _buildTextField(humidityController, "Humidity (%)"),
-            _buildTextField(phController, "pH Level"),
-            _buildTextField(rainfallController, "Rainfall (mm)"),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: getCropRecommendation,
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 14, horizontal: 50),
-                backgroundColor: Colors.green[700],
-              ),
-              child: Text("Recommend Crop", style: TextStyle(fontSize: 18, color: Colors.white)),
-            ),
-            SizedBox(height: 20),
-            if (recommendedCrop.isNotEmpty)
-              Container(
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.green[100],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  "🌾 Recommended Crop: $recommendedCrop",
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green[900],
+              Center(
+                child: AnimatedSwitcher(
+                  duration: Duration(milliseconds: 500),
+                  child: isLoading
+                      ? CircularProgressIndicator(key: ValueKey('loading'))
+                      : ElevatedButton(
+                    key: ValueKey('button'),
+                    onPressed: getCropRecommendation,
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 14, horizontal: 50),
+                      backgroundColor: Colors.green[700],
+                    ),
+                    child: Text(
+                      "Recommend Crop",
+                      style: TextStyle(fontSize: 18, color: Colors.white),
+                    ),
                   ),
                 ),
               ),
-          ],
+              SizedBox(height: 20),
+
+              AnimatedOpacity(
+                duration: Duration(milliseconds: 500),
+                opacity: recommendedCrop.isNotEmpty ? 1.0 : 0.0,
+                child: Center(
+                  child: AnimatedContainer(
+                    duration: Duration(milliseconds: 500),
+                    width: recommendedCrop.isNotEmpty ? double.infinity : 0,
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green[100],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      "🌾 Recommended Crop: $recommendedCrop",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green[900],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -173,26 +175,6 @@ class _HomeScreenState extends State<HomeScreen> {
           fillColor: Colors.white,
         ),
       ),
-    );
-  }
-
-  void _showDialog(BuildContext context, String title, String content) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(content),
-          actions: [
-            TextButton(
-              child: Text("OK"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
     );
   }
 }
