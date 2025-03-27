@@ -33,7 +33,7 @@ class CropRecommendationApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Crop Recommendation',
+      title: 'SoilGPT',
       theme: ThemeData(primarySwatch: Colors.green),
       home: isLoggedIn ?  HomeScreen() :  LoginScreen(),
     );
