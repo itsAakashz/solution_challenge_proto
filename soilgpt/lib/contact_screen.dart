@@ -28,7 +28,7 @@ class ContactScreen extends StatelessWidget {
             Center(
               child: CircleAvatar(
                 radius: 50,
-                backgroundImage: AssetImage('assets/logo.png'), // Ensure logo.png exists
+                backgroundImage: AssetImage('assets/images/img.jpg'), // Ensure logo.png exists
               ),
             ),
             const SizedBox(height: 20),
@@ -43,8 +43,8 @@ class ContactScreen extends StatelessWidget {
             // Email
             ListTile(
               leading: const Icon(Icons.email, color: Colors.blue),
-              title: const Text('support@soilgpt.com'),
-              onTap: () => _launchURL('mailto:support@soilgpt.com'),
+              title: const Text('contact@clgcart.tech'),
+              onTap: () => _launchURL('mailto:contact@clgcart.tech'),
             ),
 
             // Phone

@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
 import 'login_screen.dart';
 import 'package:SoilGPT/contact_screen.dart';
+import 'package:SoilGPT/soilLens_screen.dart';
 
 
 
@@ -166,7 +167,7 @@ Suggest the best crop(s) name along with reasons.
               leading: Icon(Icons.camera_alt),
               title: Text('Soil Lens'),
               onTap: () {
-                // Navigate to Soil Lens page
+                Navigator.push(context, MaterialPageRoute(builder: (context) => SoilLensScreen()));
               },
             ),
             ListTile(
