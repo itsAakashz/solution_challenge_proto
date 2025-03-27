@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
 
@@ -15,17 +15,44 @@ class _LoginScreenState extends State<LoginScreen> {
   bool showPassword = false;
 
   Future<void> login() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? storedEmail = prefs.getString('email');
-    String? storedPassword = prefs.getString('password');
+    final String email = emailController.text.trim();
+    final String password = passwordController.text.trim();
 
-    if (emailController.text == storedEmail && passwordController.text == storedPassword) {
-      await prefs.setBool('isLoggedIn', true);
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
-    } else {
+    if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Invalid email or password!"), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text("Please enter email and password"),
+          backgroundColor: Colors.red,
+        ),
       );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Navigate to HomeScreen upon successful login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = "An error occurred. Please try again.";
+      if (e.code == 'user-not-found') {
+        errorMessage = "No user found for that email.";
+      } else if (e.code == 'wrong-password') {
+        errorMessage = "Wrong password provided.";
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+      );
+    } finally {
+      setState(() => isLoading = false);
     }
   }
 
@@ -39,11 +66,21 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("SOIL GPT", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.green[700])),
+              Text(
+                "SOIL GPT",
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green[700],
+                ),
+              ),
               SizedBox(height: 30),
               TextField(
                 controller: emailController,
-                decoration: InputDecoration(labelText: "Email", border: OutlineInputBorder()),
+                decoration: InputDecoration(
+                  labelText: "Email",
+                  border: OutlineInputBorder(),
+                ),
               ),
               SizedBox(height: 10),
               TextField(
@@ -59,13 +96,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               SizedBox(height: 20),
-              ElevatedButton(
+              isLoading
+                  ? CircularProgressIndicator()
+                  : ElevatedButton(
                 onPressed: login,
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green[700]),
-                child: Text("Login", style: TextStyle(fontSize: 18, color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green[700],
+                ),
+                child: Text(
+                  "Login",
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
               ),
               TextButton(
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterScreen())),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => RegisterScreen()),
+                ),
                 child: Text("Create an account"),
               ),
             ],
