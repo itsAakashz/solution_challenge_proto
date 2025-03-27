@@ -48,6 +48,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+<<<<<<< HEAD
     if (!isValidPassword(password)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Password must be at least 6 characters"), backgroundColor: Colors.red),
@@ -59,6 +60,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+=======
+    setState(() => isLoading = true);
+
+    try {
+      // Check if user already exists
+      var userQuery = await FirebaseFirestore.instance.collection('users')
+          .where('email', isEqualTo: email)
+          .get();
+
+      if (userQuery.docs.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("User already registered. Please log in."), backgroundColor: Colors.red),
+        );
+        setState(() => isLoading = false);
+        return;
+      }
+
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+>>>>>>> dd8bbe347dbe0a52f9d32c58446a2a71716f501f
         email: email,
         password: password,
       );
@@ -72,6 +92,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         SnackBar(content: Text("Account created successfully!"), backgroundColor: Colors.green),
       );
 
+<<<<<<< HEAD
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginScreen()));
     } on FirebaseAuthException catch (e) {
       String errorMessage = "An error occurred. Please try again.";
@@ -83,6 +104,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
       );
+=======
+      await Future.delayed(Duration(seconds: 2));
+
+      if (mounted) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'email-already-in-use') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("User already registered. Please log in."), backgroundColor: Colors.red),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? "Registration failed"), backgroundColor: Colors.red),
+        );
+      }
+>>>>>>> dd8bbe347dbe0a52f9d32c58446a2a71716f501f
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("An unexpected error occurred."), backgroundColor: Colors.red),
@@ -91,6 +129,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => isLoading = false);
   }
+
+
 
   @override
   Widget build(BuildContext context) {

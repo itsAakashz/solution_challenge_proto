@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
 
@@ -15,32 +15,18 @@ class _LoginScreenState extends State<LoginScreen> {
   bool showPassword = false;
 
   Future<void> login() async {
-    String email = emailController.text.trim();
-    String password = passwordController.text.trim();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? storedEmail = prefs.getString('email');
+    String? storedPassword = prefs.getString('password');
 
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please enter email and password"), backgroundColor: Colors.red),
-      );
-      return;
-    }
-
-    setState(() => isLoading = true);
-
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
+    if (emailController.text == storedEmail && passwordController.text == storedPassword) {
+      await prefs.setBool('isLoggedIn', true);
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
-    } catch (e) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Invalid email or password!"), backgroundColor: Colors.red),
       );
     }
-
-    setState(() => isLoading = false);
   }
 
   @override
@@ -73,9 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               SizedBox(height: 20),
-              isLoading
-                  ? CircularProgressIndicator()
-                  : ElevatedButton(
+              ElevatedButton(
                 onPressed: login,
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green[700]),
                 child: Text("Login", style: TextStyle(fontSize: 18, color: Colors.white)),

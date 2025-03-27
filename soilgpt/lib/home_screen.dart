@@ -11,6 +11,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   final TextEditingController nitrogenController = TextEditingController();
   final TextEditingController phosphorusController = TextEditingController();
   final TextEditingController potassiumController = TextEditingController();
@@ -72,17 +74,88 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey, // Set scaffold key
       backgroundColor: Colors.green[50],
       appBar: AppBar(
         title: Text("SOIL GPT"),
         backgroundColor: Colors.green[700],
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: logout,
-          ),
-        ],
+        leading: IconButton(
+          icon: Icon(Icons.menu),
+          onPressed: () {
+            _scaffoldKey.currentState?.openDrawer(); // Open drawer
+          },
+        ),
+        // actions: [
+        //   IconButton(
+        //     icon: Icon(Icons.logout),
+        //     onPressed: logout,
+        //   ),
+        // ],
       ),
+      drawer: Drawer(
+        child: Column(
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage("assets/images/img.jpg"), // Background image
+                  fit: BoxFit.cover, // Ensures full coverage
+                ),
+              ),
+              child: Container(
+                padding: EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.4), // Dark overlay for better text visibility
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Soil GPT',
+                    style: TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.home),
+              title: Text('Home'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.camera_alt),
+              title: Text('Soil Lens'),
+              onTap: () {
+                // Navigate to Soil Lens page
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.contact_page),
+              title: Text('Contact'),
+              onTap: () {
+                // Navigate to Contact page
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.settings),
+              title: Text('Settings'),
+              onTap: () {
+                // Navigate to Settings
+              },
+            ),
+            Spacer(), // Push logout to bottom
+            ListTile(
+              leading: Icon(Icons.logout, color: Colors.red),
+              title: Text('Logout', style: TextStyle(color: Colors.red)),
+              onTap: logout,
+            ),
+            SizedBox(height: 20),
+          ],
+        ),
+      ),
+
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.all(16.0),

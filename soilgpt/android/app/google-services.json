@@ -12,7 +12,12 @@
           "package_name": "com.example.soilgpt"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1030399222292-8khth131he0mlflj7h2n7lm6og4043ou.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDJaH8VQENI3pT8LbamrgzdXNaqucsb2h0"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1030399222292-8khth131he0mlflj7h2n7lm6og4043ou.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1030399222292-1f83crudm3dificeha0ju9tuumgksb6s.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.soilgpt"
+              }
+            }
+          ]
         }
       }
     }
