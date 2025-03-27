@@ -25,6 +25,9 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isLoading = false;
 
   Future<void> getCropRecommendation() async {
+    // Close the keyboard
+    FocusScope.of(context).unfocus();
+
     setState(() {
       isLoading = true;
     });
@@ -44,7 +47,7 @@ provide the best crop recommendation. Ensure it is based on scientific knowledge
 - Soil pH: ${phController.text}
 - Rainfall: ${rainfallController.text} mm
 
-Suggest the best crop(s) along with reasons.
+Suggest the best crop(s) name along with reasons.
 """;
 
     try {
@@ -92,6 +95,7 @@ Suggest the best crop(s) along with reasons.
       });
     }
   }
+
 
 
 
