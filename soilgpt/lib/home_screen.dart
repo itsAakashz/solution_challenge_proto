@@ -33,28 +33,36 @@ class _HomeScreenState extends State<HomeScreen> {
     final url = Uri.parse("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey");
 
     String prompt = """
-  You are an expert in agronomy. Based on the given soil and weather conditions, 
-  provide the best crop recommendation. Ensure it is based on scientific knowledge.
+You are an expert in agronomy. Based on the given soil and weather conditions, 
+provide the best crop recommendation. Ensure it is based on scientific knowledge.
 
-  - Nitrogen: ${nitrogenController.text} mg/kg
-  - Phosphorus: ${phosphorusController.text} mg/kg
-  - Potassium: ${potassiumController.text} mg/kg
-  - Temperature: ${temperatureController.text} °C
-  - Humidity: ${humidityController.text} %
-  - Soil pH: ${phController.text}
-  - Rainfall: ${rainfallController.text} mm
+- Nitrogen: ${nitrogenController.text} mg/kg
+- Phosphorus: ${phosphorusController.text} mg/kg
+- Potassium: ${potassiumController.text} mg/kg
+- Temperature: ${temperatureController.text} °C
+- Humidity: ${humidityController.text} %
+- Soil pH: ${phController.text}
+- Rainfall: ${rainfallController.text} mm
 
-  Suggest the best crop(s) along with reasons.
-  """;
+Suggest the best crop(s) along with reasons.
+""";
 
     try {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "prompt": {"text": prompt},
-          "temperature": 0.7,
-          "maxTokens": 200,
+          "contents": [
+            {
+              "parts": [
+                {"text": prompt}
+              ]
+            }
+          ],
+          "generationConfig": {
+            "temperature": 0.7,
+            "maxOutputTokens": 200
+          }
         }),
       );
 
@@ -62,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
         var jsonResponse = jsonDecode(response.body);
         if (jsonResponse.containsKey('candidates') && jsonResponse['candidates'].isNotEmpty) {
           setState(() {
-            recommendedCrop = jsonResponse['candidates'][0]['output'];
+            recommendedCrop = jsonResponse['candidates'][0]['content']['parts'][0]['text'];
           });
         } else {
           setState(() {
@@ -84,6 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
   }
+
 
 
 
