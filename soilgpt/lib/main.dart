@@ -148,15 +148,6 @@ class _SplashScreenState extends State<SplashScreen>
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.green.shade700),
                 strokeWidth: 3,
               ),
-              SizedBox(height: 15),
-              Text(
-                'Loading...',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.green.shade800,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
             ],
           ),
         ),
