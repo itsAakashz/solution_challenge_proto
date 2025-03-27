@@ -56,17 +56,15 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.green[50],
       appBar: AppBar(
-        title: Text("Soil Lens"),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.green[700]!, Colors.green[400]!],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
+        title: Text(
+          "Soil Lens",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
         ),
+        centerTitle: true,
+        elevation: 2,
+        backgroundColor: Colors.green[700],
       ),
       body: Padding(
         padding: EdgeInsets.all(16),
@@ -74,15 +72,14 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
+              elevation: 5,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               child: Container(
                 height: 220,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
+                  color: Colors.white,
                   image: _image != null
                       ? DecorationImage(
                     image: FileImage(_image!),
@@ -105,7 +102,7 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton.icon(
-                  icon: Icon(Icons.camera_alt),
+                  icon: Icon(Icons.camera_alt, color: Colors.white),
                   label: Text("Camera"),
                   onPressed: () => _pickImage(ImageSource.camera),
                   style: ElevatedButton.styleFrom(
@@ -116,11 +113,11 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
                 ),
                 SizedBox(width: 10),
                 ElevatedButton.icon(
-                  icon: Icon(Icons.image),
+                  icon: Icon(Icons.image, color: Colors.white),
                   label: Text("Gallery"),
                   onPressed: () => _pickImage(ImageSource.gallery),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[700],
+                    backgroundColor: Colors.green[400],
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   ),
@@ -131,22 +128,48 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
             if (_isLoading)
               Column(
                 children: [
-                  CircularProgressIndicator(),
+                  CircularProgressIndicator(color: Colors.green[700]),
                   SizedBox(height: 10),
                   Text("Analyzing...", style: TextStyle(fontSize: 16, color: Colors.grey[600])),
                 ],
               ),
             if (_analysisResult.isNotEmpty)
               Card(
-                color: Colors.green[100],
-                elevation: 4,
+                elevation: 5,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                child: Padding(
-                  padding: EdgeInsets.all(12),
-                  child: Text(
-                    _analysisResult,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green[900]),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    gradient: LinearGradient(
+                      colors: [Colors.green[200]!, Colors.green[50]!],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Soil Analysis Result",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green[900],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        _analysisResult,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

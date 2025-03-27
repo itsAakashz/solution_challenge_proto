@@ -1,35 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'login_screen.dart'; // Ensure this import points to your LoginScreen file
+import 'login_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends State<RegisterScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
   bool showPassword = false;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 800),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+    _animationController.forward();
+  }
 
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
+    _animationController.dispose();
     super.dispose();
-  }
-
-  bool isValidEmail(String email) {
-    final emailRegex = RegExp(
-        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-    return emailRegex.hasMatch(email);
-  }
-
-  bool isValidPassword(String password) {
-    return password.length >= 6; // Minimum 6 characters
   }
 
   Future<void> register() async {
@@ -37,141 +45,151 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final String password = passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text("Please enter email and password"),
-            backgroundColor: Colors.red),
-      );
+      _showSnackbar("Please enter an email and password", Colors.red);
       return;
     }
 
-    if (!isValidEmail(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text("Please enter a valid email address"),
-            backgroundColor: Colors.red),
-      );
+    // Improved email validation using regex
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    if (!emailRegex.hasMatch(email)) {
+      _showSnackbar("Please enter a valid email address", Colors.red);
       return;
     }
 
-    if (!isValidPassword(password)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text("Password must be at least 6 characters"),
-            backgroundColor: Colors.red),
-      );
+    if (password.length < 6) {
+      _showSnackbar("Password must be at least 6 characters long", Colors.red);
       return;
     }
 
     setState(() => isLoading = true);
-
     try {
-      // Create user with email and password
       UserCredential userCredential =
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // Save user information to Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userCredential.user!.uid)
-          .set({
-        'email': email,
-        // Add additional user fields here if needed
-      });
+          .set({'email': email});
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text("Account created successfully!"),
-            backgroundColor: Colors.green),
-      );
-
-      // Navigate to LoginScreen after a short delay
+      _showSnackbar("Account created successfully!", Colors.green);
       await Future.delayed(Duration(seconds: 2));
+
       if (mounted) {
         Navigator.pushReplacement(
             context, MaterialPageRoute(builder: (context) => LoginScreen()));
       }
     } on FirebaseAuthException catch (e) {
       String errorMessage = "An error occurred. Please try again.";
-      if (e.code == 'weak-password') {
-        errorMessage = "The password provided is too weak.";
-      } else if (e.code == 'email-already-in-use') {
-        errorMessage = "An account already exists for that email.";
+      if (e.code == 'email-already-in-use') {
+        errorMessage = "This email is already registered.";
       } else if (e.code == 'invalid-email') {
-        errorMessage = "The email address is not valid.";
+        errorMessage = "Invalid email format. Please use a proper email.";
+      } else if (e.code == 'weak-password') {
+        errorMessage = "Your password is too weak. Try a stronger one.";
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text("An unexpected error occurred."),
-            backgroundColor: Colors.red),
-      );
+      _showSnackbar(errorMessage, Colors.red);
     } finally {
       setState(() => isLoading = false);
     }
   }
 
+  void _showSnackbar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: color),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[50],
-      body: Center(
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Create Account",
-                  style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green[700])),
-              SizedBox(height: 30),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                    labelText: "Email", border: OutlineInputBorder()),
+      body: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFb2f7b0), Color(0xFFd2f8d2)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
-              SizedBox(height: 10),
-              TextField(
-                controller: passwordController,
-                obscureText: !showPassword,
-                decoration: InputDecoration(
-                  labelText: "Password",
-                  border: OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(showPassword
-                        ? Icons.visibility
-                        : Icons.visibility_off),
-                    onPressed: () =>
-                        setState(() => showPassword = !showPassword),
-                  ),
+            ),
+          ),
+          Center(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "Create Account",
+                      style: GoogleFonts.poppins(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green[800]),
+                    ),
+                    SizedBox(height: 30),
+                    _buildTextField(emailController, "Email", false),
+                    SizedBox(height: 10),
+                    _buildTextField(passwordController, "Password", true),
+                    SizedBox(height: 20),
+                    isLoading
+                        ? CircularProgressIndicator(color: Colors.green[700])
+                        : ElevatedButton(
+                      onPressed: register,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green[700],
+                        padding: EdgeInsets.symmetric(
+                            vertical: 14, horizontal: 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text("Register",
+                          style: TextStyle(
+                              fontSize: 18, color: Colors.white)),
+                    ),
+                    SizedBox(height: 10),
+                    TextButton(
+                      onPressed: () => Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => LoginScreen())),
+                      child: Text("Already have an account? Login",
+                          style: TextStyle(color: Colors.green[800])),
+                    ),
+                  ],
                 ),
               ),
-              SizedBox(height: 20),
-              isLoading
-                  ? CircularProgressIndicator()
-                  : ElevatedButton(
-                onPressed: register,
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green[700]),
-                child: Text("Register",
-                    style: TextStyle(fontSize: 18, color: Colors.white)),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pushReplacement(context,
-                    MaterialPageRoute(builder: (context) => LoginScreen())),
-                child: Text("Already have an account? Login"),
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+      TextEditingController controller, String label, bool isPassword) {
+    return TextField(
+      controller: controller,
+      obscureText: isPassword && !showPassword,
+      keyboardType:
+      isPassword ? TextInputType.text : TextInputType.emailAddress,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: Colors.white,
+        suffixIcon: isPassword
+            ? IconButton(
+          icon: Icon(
+              showPassword ? Icons.visibility : Icons.visibility_off),
+          onPressed: () => setState(() => showPassword = !showPassword),
+        )
+            : null,
       ),
     );
   }
