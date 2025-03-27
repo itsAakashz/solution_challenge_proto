@@ -28,7 +28,7 @@ class ContactScreen extends StatelessWidget {
             Center(
               child: CircleAvatar(
                 radius: 50,
-                backgroundImage: AssetImage('assets/images/img.jpg'), // Ensure logo.png exists
+                backgroundImage: AssetImage('assets/images/img.jpg'), // Ensure the image exists
               ),
             ),
             const SizedBox(height: 20),
@@ -47,18 +47,11 @@ class ContactScreen extends StatelessWidget {
               onTap: () => _launchURL('mailto:contact@clgcart.tech'),
             ),
 
-            // Phone
-            ListTile(
-              leading: const Icon(Icons.phone, color: Colors.green),
-              title: const Text('+91 9876543210'),
-              onTap: () => _launchURL('tel:+919876543210'),
-            ),
-
             // Website
             ListTile(
               leading: const Icon(Icons.web, color: Colors.orange),
               title: const Text('Visit Website'),
-              onTap: () => _launchURL('https://soilgpt.com'),
+              onTap: () => _launchURL('https://github.com/itsAakashz/solution_challenge_proto'),
             ),
 
             const SizedBox(height: 20),
@@ -75,17 +68,39 @@ class ContactScreen extends StatelessWidget {
               children: [
                 IconButton(
                   icon: const Icon(Icons.facebook, color: Colors.blue, size: 30),
-                  onPressed: () => _launchURL('https://facebook.com/soilgpt'),
+                  onPressed: () => _launchURL('#'),
                 ),
                 IconButton(
                   icon: const Icon(Icons.linked_camera, color: Colors.red, size: 30),
-                  onPressed: () => _launchURL('https://instagram.com/soilgpt'),
+                  onPressed: () => _launchURL('#'),
                 ),
                 IconButton(
                   icon: const Icon(Icons.alternate_email, color: Colors.lightBlue, size: 30),
-                  onPressed: () => _launchURL('https://twitter.com/soilgpt'),
+                  onPressed: () => _launchURL('#'),
                 ),
               ],
+            ),
+
+            // Spacer to push footer to bottom
+            const Spacer(),
+
+            // Made with Love Section
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: Column(
+                  children: [
+                    const Text(
+                      'Made with ❤️ by',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                    const Text(
+                      'Team HackHeads',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
