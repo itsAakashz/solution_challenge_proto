@@ -54,6 +54,8 @@ flutter_launcher_icons:
       android: "launcher_icon"
       ios: true
       image_path: "assets/logo.png"
+      mockito: ^5.4.2
+      build_runner: ^2.4.6
 
 
 flutter_icons:

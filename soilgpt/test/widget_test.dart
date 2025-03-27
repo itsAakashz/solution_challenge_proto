@@ -1,19 +1,13 @@
 import 'package:SoilGPT/main.dart';
 import 'package:SoilGPT/login_screen.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:mockito/mockito.dart';
-import 'package:firebase_core_platform_interface/firebase_core_platform_interface.dart';
-
-// Mock Firebase Initialization
-class MockFirebase extends Mock implements Firebase {}
 
 void main() {
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
-    Firebase.initializeApp();
+    await Firebase.initializeApp(); // Ensure Firebase initializes
     SharedPreferences.setMockInitialValues({'isLoggedIn': false});
   });
 

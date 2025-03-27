@@ -15,6 +15,16 @@ class ContactScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("Contact Us"),
+        backgroundColor: Colors.green[700],
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context); // This will navigate back
+          },
+        ),
+      ),
       body: Stack(
         children: [
           // Light Green Gradient Background
@@ -43,7 +53,7 @@ class ContactScreen extends StatelessWidget {
                           BoxShadow(
                             color: Colors.black26,
                             blurRadius: 10,
-                            offset: Offset(3, 6),
+                            offset: const Offset(3, 6),
                           ),
                         ],
                       ),
@@ -120,7 +130,7 @@ class ContactScreen extends StatelessWidget {
             BoxShadow(
               color: Colors.black12,
               blurRadius: 8,
-              offset: Offset(2, 4),
+              offset: const Offset(2, 4),
             ),
           ],
           border: Border.all(color: Colors.green.withOpacity(0.3)),
