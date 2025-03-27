@@ -4,6 +4,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
 import 'login_screen.dart';
+import 'package:SoilGPT/contact_screen.dart';
+
+
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -170,6 +173,10 @@ Suggest the best crop(s) name along with reasons.
               leading: Icon(Icons.contact_page),
               title: Text('Contact'),
               onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ContactScreen()),
+                );
                 // Navigate to Contact page
               },
             ),
