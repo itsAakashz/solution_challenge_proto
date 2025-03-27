@@ -1,0 +1,2 @@
+C:/Users/adars/Desktop/saka/solution_challenge_proto/android/app/.cxx/Debug/4a5v6s31/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/adars/Desktop/saka/solution_challenge_proto/android/app/.cxx/Debug/4a5v6s31/x86_64/CMakeFiles/rebuild_cache.dir
