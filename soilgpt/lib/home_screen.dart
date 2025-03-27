@@ -30,15 +30,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     final apiKey = "AIzaSyBX55Wxz61k-TpRhcuLyOGr8vU2PdFeS1Q";
-    final url = Uri.parse("https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateText?key=$apiKey");
+    final url = Uri.parse("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey");
 
-    // 🔥 Improved Prompt for More Accurate Recommendations
     String prompt = """
-  You are an expert in agronomy and soil science. Based on the given soil and weather conditions, 
-  provide the most suitable crop recommendation. Consider essential agronomic factors and scientific knowledge 
-  for the best yield and sustainability.
+  You are an expert in agronomy. Based on the given soil and weather conditions, 
+  provide the best crop recommendation. Ensure it is based on scientific knowledge.
 
-  Here are the details:
   - Nitrogen: ${nitrogenController.text} mg/kg
   - Phosphorus: ${phosphorusController.text} mg/kg
   - Potassium: ${potassiumController.text} mg/kg
@@ -47,8 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
   - Soil pH: ${phController.text}
   - Rainfall: ${rainfallController.text} mm
 
-  Based on this data, suggest the best crop(s) for cultivation. Also, explain why they are suitable and provide 
-  tips for maximizing yield.
+  Suggest the best crop(s) along with reasons.
   """;
 
     try {
@@ -57,21 +53,25 @@ class _HomeScreenState extends State<HomeScreen> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "prompt": {"text": prompt},
-          "temperature": 0.7, // Adjust for creativity (0.3 for conservative results)
-          "maxTokens": 200, // Limit response size
+          "temperature": 0.7,
+          "maxTokens": 200,
         }),
       );
 
       if (response.statusCode == 200) {
         var jsonResponse = jsonDecode(response.body);
-        String geminiResponse = jsonResponse['candidates'][0]['output'];
-
-        setState(() {
-          recommendedCrop = geminiResponse;
-        });
+        if (jsonResponse.containsKey('candidates') && jsonResponse['candidates'].isNotEmpty) {
+          setState(() {
+            recommendedCrop = jsonResponse['candidates'][0]['output'];
+          });
+        } else {
+          setState(() {
+            recommendedCrop = "No valid response from API.";
+          });
+        }
       } else {
         setState(() {
-          recommendedCrop = "Error: Could not get recommendation.";
+          recommendedCrop = "Error: ${response.body}";
         });
       }
     } catch (e) {
@@ -84,6 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
   }
+
 
 
   Future<void> logout() async {
@@ -231,19 +232,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Center(
                   child: AnimatedContainer(
                     duration: Duration(milliseconds: 500),
-                    width: recommendedCrop.isNotEmpty ? double.infinity : 0,
-                    padding: EdgeInsets.all(12),
+                    padding: EdgeInsets.all(12.0),
                     decoration: BoxDecoration(
-                      color: Colors.green[100],
-                      borderRadius: BorderRadius.circular(10),
+                      color: Color.fromRGBO(200, 230, 200, 1), // Example color
+                      borderRadius: BorderRadius.circular(10.0),
                     ),
-                    child: Text(
-                      "🌾 Recommended Crop: $recommendedCrop",
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green[900],
+                    constraints: BoxConstraints(
+                      minWidth: 0,
+                      maxWidth: double.infinity, // Make sure this is not transitioning to finite values
+                      minHeight: 0,
+                      maxHeight: 500, // Set a reasonable max height
+                    ),
+                    child: SingleChildScrollView(
+                      child: Text(
+                        "🌾 Recommended Crop: $recommendedCrop",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green[900],
+                        ),
                       ),
                     ),
                   ),
