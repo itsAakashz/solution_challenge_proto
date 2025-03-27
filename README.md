@@ -1,4 +1,4 @@
-Here’s a well-structured **README.md** file for your **SoilGPT** project. It includes detailed descriptions of the project, its features, installation steps, usage, and future improvements. 
+
 
 ---
 
