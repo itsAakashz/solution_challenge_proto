@@ -29,25 +29,45 @@ class _HomeScreenState extends State<HomeScreen> {
       isLoading = true;
     });
 
-    final url = Uri.parse("http://YOUR_FLASK_SERVER_IP:5000/predict");
+    final apiKey = "AIzaSyBX55Wxz61k-TpRhcuLyOGr8vU2PdFeS1Q";
+    final url = Uri.parse("https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateText?key=$apiKey");
+
+    // 🔥 Improved Prompt for More Accurate Recommendations
+    String prompt = """
+  You are an expert in agronomy and soil science. Based on the given soil and weather conditions, 
+  provide the most suitable crop recommendation. Consider essential agronomic factors and scientific knowledge 
+  for the best yield and sustainability.
+
+  Here are the details:
+  - Nitrogen: ${nitrogenController.text} mg/kg
+  - Phosphorus: ${phosphorusController.text} mg/kg
+  - Potassium: ${potassiumController.text} mg/kg
+  - Temperature: ${temperatureController.text} °C
+  - Humidity: ${humidityController.text} %
+  - Soil pH: ${phController.text}
+  - Rainfall: ${rainfallController.text} mm
+
+  Based on this data, suggest the best crop(s) for cultivation. Also, explain why they are suitable and provide 
+  tips for maximizing yield.
+  """;
 
     try {
       final response = await http.post(
         url,
-        body: {
-          'Nitrogen': nitrogenController.text,
-          'Phosphorus': phosphorusController.text,
-          'Potassium': potassiumController.text,
-          'Temperature': temperatureController.text,
-          'Humidity': humidityController.text,
-          'Ph': phController.text,
-          'Rainfall': rainfallController.text,
-        },
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "prompt": {"text": prompt},
+          "temperature": 0.7, // Adjust for creativity (0.3 for conservative results)
+          "maxTokens": 200, // Limit response size
+        }),
       );
 
       if (response.statusCode == 200) {
+        var jsonResponse = jsonDecode(response.body);
+        String geminiResponse = jsonResponse['candidates'][0]['output'];
+
         setState(() {
-          recommendedCrop = jsonDecode(response.body)['result'];
+          recommendedCrop = geminiResponse;
         });
       } else {
         setState(() {
@@ -64,6 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
   }
+
 
   Future<void> logout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
