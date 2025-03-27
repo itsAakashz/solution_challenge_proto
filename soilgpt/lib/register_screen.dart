@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'login_screen.dart';
+import 'login_screen.dart'; // Ensure this import points to your LoginScreen file
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -14,15 +14,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool isLoading = false;
   bool showPassword = false;
 
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
   bool isValidEmail(String email) {
-    RegExp emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
     return emailRegex.hasMatch(email);
   }
 
+  bool isValidPassword(String password) {
+    return password.length >= 6; // Example: Minimum 6 characters
+  }
 
   Future<void> register() async {
-    String email = emailController.text.trim();
-    String password = passwordController.text.trim();
+    final String email = emailController.text.trim();
+    final String password = passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -38,6 +48,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+<<<<<<< HEAD
+    if (!isValidPassword(password)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Password must be at least 6 characters"), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+=======
     setState(() => isLoading = true);
 
     try {
@@ -55,18 +78,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
 
       UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+>>>>>>> dd8bbe347dbe0a52f9d32c58446a2a71716f501f
         email: email,
         password: password,
       );
 
       await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
         'email': email,
+        // Add additional user fields here if needed
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Account created successfully!"), backgroundColor: Colors.green),
       );
 
+<<<<<<< HEAD
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = "An error occurred. Please try again.";
+      if (e.code == 'weak-password') {
+        errorMessage = "The password provided is too weak.";
+      } else if (e.code == 'email-already-in-use') {
+        errorMessage = "An account already exists for that email.";
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+      );
+=======
       await Future.delayed(Duration(seconds: 2));
 
       if (mounted) {
@@ -82,9 +120,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
           SnackBar(content: Text(e.message ?? "Registration failed"), backgroundColor: Colors.red),
         );
       }
+>>>>>>> dd8bbe347dbe0a52f9d32c58446a2a71716f501f
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        SnackBar(content: Text("An unexpected error occurred."), backgroundColor: Colors.red),
       );
     }
 
