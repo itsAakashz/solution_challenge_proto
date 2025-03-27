@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1030399222292",
+    "project_id": "soilgpt-cf913",
+    "storage_bucket": "soilgpt-cf913.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1030399222292:android:6f7578dbce18c0baf4bd01",
+        "android_client_info": {
+          "package_name": "com.example.soilgpt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJaH8VQENI3pT8LbamrgzdXNaqucsb2h0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -13,10 +14,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool isLoading = false;
   bool showPassword = false;
 
-  bool isValidGmail(String email) {
-    RegExp gmailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@gmail\.com\$');
-    return gmailRegex.hasMatch(email);
+  bool isValidEmail(String email) {
+    RegExp emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    return emailRegex.hasMatch(email);
   }
+
 
   Future<void> register() async {
     String email = emailController.text.trim();
@@ -29,22 +31,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    if (!isValidGmail(email)) {
+    if (!isValidEmail(email)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please enter a valid Gmail address"), backgroundColor: Colors.red),
+        SnackBar(content: Text("Please enter a valid email address"), backgroundColor: Colors.red),
       );
       return;
     }
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('email', email);
-    await prefs.setString('password', password);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Account created successfully!"), backgroundColor: Colors.green),
-    );
+    setState(() => isLoading = true);
 
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+        'email': email,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Account created successfully!"), backgroundColor: Colors.green),
+      );
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+      );
+    }
+
+    setState(() => isLoading = false);
   }
 
   @override
@@ -77,7 +94,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               SizedBox(height: 20),
-              ElevatedButton(
+              isLoading
+                  ? CircularProgressIndicator()
+                  : ElevatedButton(
                 onPressed: register,
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green[700]),
                 child: Text("Register", style: TextStyle(fontSize: 18, color: Colors.white)),
