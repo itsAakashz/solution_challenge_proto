@@ -147,9 +147,8 @@ This project is licensed under the MIT License.
 
 ## **📧 Contact**
 For queries, suggestions, or collaborations:  
-📧 **Aakash Gupta** – [your-email@example.com](mailto:your-email@example.com)  
-🌍 **Project Repository** – [GitHub](https://github.com/yourusername/SoilGPT)
+📧 **Aakash Gupta** – [gzatrop@gmail.com](mailto:gzatrop@gmail.com)  
+🌍 **Project Repository** – [GitHub](https://github.com/itsAakashz/SoilGPT)
 
 ---
 
-This **README.md** provides a professional and detailed documentation for your project. Let me know if you need modifications! 🚀
