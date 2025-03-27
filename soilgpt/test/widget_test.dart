@@ -1,22 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:soilgpt/main.dart';
+import 'package:soilgpt/login_screen.dart';
+
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Pass a valid bool (false) instead of null.
+  testWidgets('LoginScreen is displayed when isLoggedIn is false', (WidgetTester tester) async {
+    // Build our app and trigger a frame.
     await tester.pumpWidget(CropRecommendationApp(isLoggedIn: false));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify that the LoginScreen is displayed.
+    expect(find.byType(LoginScreen), findsOneWidget);
   });
 }
