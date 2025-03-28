@@ -4,15 +4,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'login_screen.dart';
 import 'package:SoilGPT/contact_screen.dart';
 import 'package:SoilGPT/soilLens_screen.dart';
+import 'package:http/http.dart' as http;
+import 'package:SoilGPT/location_screen.dart';
+import 'dart:convert';
 
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
-
 class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
   final TextEditingController nitrogenController = TextEditingController();
   final TextEditingController phosphorusController = TextEditingController();
   final TextEditingController potassiumController = TextEditingController();
@@ -21,6 +22,70 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController phController = TextEditingController();
   final TextEditingController rainfallController = TextEditingController();
 
+  String? savedLocation;
+
+  bool isLoading = false;
+  String result = "";
+  String recommendedCrop = "";  // Declare recommendedCrop here
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLocation(); // Load the saved location when the screen is initialized
+  }
+
+  // Load saved location from SharedPreferences
+  Future<void> _loadSavedLocation() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      savedLocation = prefs.getString('savedLocation');
+    });
+  }
+
+  // Save location to SharedPreferences
+  Future<void> _saveLocation(String location) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('savedLocation', location);
+    setState(() {
+      savedLocation = location;
+    });
+  }
+
+  // Location input dialog
+  void _showLocationDialog() {
+    final TextEditingController locationController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Enter Location"),
+          content: TextField(
+            controller: locationController,
+            decoration: InputDecoration(hintText: "Country/State/Region"),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                String location = locationController.text;
+                if (location.isNotEmpty) {
+                  _saveLocation(location); // Save the entered location
+                }
+                Navigator.of(context).pop();
+              },
+              child: Text("Save"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Cancel"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> logout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', false);
@@ -28,35 +93,77 @@ class _HomeScreenState extends State<HomeScreen> {
         context, MaterialPageRoute(builder: (context) => LoginScreen()));
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      body: Stack(
-        children: [
-          // Light Green Gradient Background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFb2f7b0), Color(0xFFd2f8d2)], // Light green gradient
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-          ),
+  // API Integration with Google API
+  Future<void> getCropRecommendation() async {
+    // Close the keyboard
+    FocusScope.of(context).unfocus();
 
-          SafeArea(
-            child: Column(
-              children: [
-                _buildAppBar(),
-                Expanded(child: _buildBody()),
-              ],
-            ),
-          ),
-        ],
-      ),
-      drawer: _buildDrawer(),
-    );
+    setState(() {
+      isLoading = true;
+    });
+
+    final apiKey = "AIzaSyBX55Wxz61k-TpRhcuLyOGr8vU2PdFeS1Q";
+    final url = Uri.parse("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey");
+
+    String prompt = """
+You are an expert in agronomy. Based on the given soil and weather conditions, 
+provide the best crop recommendation. Ensure it is based on scientific knowledge.
+
+- Nitrogen: ${nitrogenController.text} mg/kg
+- Phosphorus: ${phosphorusController.text} mg/kg
+- Potassium: ${potassiumController.text} mg/kg
+- Temperature: ${temperatureController.text} °C
+- Humidity: ${humidityController.text} %
+- Soil pH: ${phController.text}
+- Rainfall: ${rainfallController.text} mm
+
+Suggest the best crop(s) along with reasons.
+""";
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "contents": [
+            {
+              "parts": [
+                {"text": prompt}
+              ]
+            }
+          ],
+          "generationConfig": {
+            "temperature": 0.7,
+            "maxOutputTokens": 200
+          }
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        var jsonResponse = jsonDecode(response.body);
+        if (jsonResponse.containsKey('candidates') && jsonResponse['candidates'].isNotEmpty) {
+          setState(() {
+            recommendedCrop = jsonResponse['candidates'][0]['content']['parts'][0]['text'];
+          });
+        } else {
+          setState(() {
+            recommendedCrop = "No valid response from API.";
+          });
+        }
+      } else {
+        setState(() {
+          recommendedCrop = "Error: ${response.body}";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        recommendedCrop = "Error: ${e.toString()}";
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   Widget _buildAppBar() {
@@ -118,6 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     () => Navigator.push(context, MaterialPageRoute(builder: (context) => SoilLensScreen()))),
             _buildDrawerItem(Icons.contact_page, 'Contact',
                     () => Navigator.push(context, MaterialPageRoute(builder: (context) => ContactScreen()))),
+            _buildDrawerItem(Icons.location_on, 'Set Location', _showLocationDialog),
             Divider(),
             _buildDrawerItem(Icons.logout, 'Logout', logout, color: Colors.red),
           ],
@@ -143,6 +251,23 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildTextField(rainfallController, "Rainfall (mm)", Icons.grain),
           SizedBox(height: 20),
           _buildRecommendButton(),
+          if (isLoading) CircularProgressIndicator(),
+          if (!isLoading && recommendedCrop.isNotEmpty) // Use recommendedCrop here
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                recommendedCrop,
+                style: TextStyle(fontSize: 18, color: Colors.green[900]),
+              ),
+            ),
+          if (savedLocation != null && savedLocation!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                "Location: $savedLocation",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.green[900]),
+              ),
+            ),
         ],
       ),
     );
@@ -185,7 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildRecommendButton() {
     return Center(
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: getCropRecommendation,
         style: ElevatedButton.styleFrom(
           padding: EdgeInsets.symmetric(vertical: 14, horizontal: 50),
           backgroundColor: Colors.green[700],
@@ -208,4 +333,36 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: onTap,
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      key: _scaffoldKey,
+      body: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFb2f7b0), Color(0xFFd2f8d2)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                _buildAppBar(),
+                Expanded(child: _buildBody()),
+              ],
+            ),
+          ),
+        ],
+      ),
+      drawer: _buildDrawer(),
+    );
+  }
 }
+
+
+
