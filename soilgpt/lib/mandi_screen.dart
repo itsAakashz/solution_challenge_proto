@@ -22,7 +22,6 @@ class _MandiScreenState extends State<MandiScreen> {
   @override
   void initState() {
     super.initState();
-    // Set initial values
     stateController.text = "Bihar";
     districtController.text = "Sheohar";
     marketController.text = "Sheohar";
@@ -62,75 +61,63 @@ class _MandiScreenState extends State<MandiScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Mandi Prices")),
+      backgroundColor: Colors.green[50],
+      appBar: AppBar(
+        title: Text("Mandi Prices", style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.green[700],
+      ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Text input fields
-            TextFormField(
-              controller: stateController,
-              decoration: InputDecoration(
-                labelText: "State",
-                hintText: "e.g. Bihar, Uttar Pradesh",
-              ),
-            ),
+            _buildTextField(stateController, "State", Icons.location_on),
             SizedBox(height: 10),
-            TextFormField(
-              controller: districtController,
-              decoration: InputDecoration(
-                labelText: "District",
-                hintText: "e.g. Sheohar, Patna",
-              ),
-            ),
+            _buildTextField(districtController, "District", Icons.map),
             SizedBox(height: 10),
-            TextFormField(
-              controller: marketController,
-              decoration: InputDecoration(
-                labelText: "Market",
-                hintText: "e.g. Sheohar, Gaya",
-              ),
-            ),
+            _buildTextField(marketController, "Market", Icons.store),
             SizedBox(height: 10),
-            TextFormField(
-              controller: commodityController,
-              decoration: InputDecoration(
-                labelText: "Commodity",
-                hintText: "e.g. Rice, Wheat",
-              ),
-            ),
+            _buildTextField(commodityController, "Commodity", Icons.shopping_cart),
             SizedBox(height: 20),
 
-            // Fetch data button
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green[700],
+                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
               onPressed: fetchData,
-              child: Text("Get Prices"),
+              child: Text("Get Prices", style: TextStyle(fontSize: 18, color: Colors.white)),
             ),
 
             SizedBox(height: 20),
 
-            // Show loading indicator
-            if (isLoading) CircularProgressIndicator(),
+            if (isLoading) CircularProgressIndicator(color: Colors.green[700]),
 
-            // Display fetched data
             Expanded(
               child: mandiData.isEmpty
-                  ? Center(child: Text("No data available"))
+                  ? Center(child: Text("No data available", style: TextStyle(fontSize: 16)))
                   : ListView.builder(
                 itemCount: mandiData.length,
                 itemBuilder: (context, index) {
                   var item = mandiData[index];
                   return Card(
-                    elevation: 3,
+                    color: Colors.green[100],
+                    elevation: 5,
                     margin: EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     child: ListTile(
-                      title: Text("${item['commodity']} - ${item['variety'] ?? 'N/A'}"),
-                      subtitle: Text("Market: ${item['market']}"),
+                      contentPadding: EdgeInsets.all(16),
+                      title: Text("${item['commodity']} - ${item['variety'] ?? 'N/A'}",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text("Market: ${item['market']}",
+                          style: TextStyle(color: Colors.black54)),
                       trailing: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text("Min: ₹${item['min_price'] ?? 'N/A'}"),
-                          Text("Max: ₹${item['max_price'] ?? 'N/A'}"),
+                          Text("Min: ₹${item['min_price'] ?? 'N/A'}",
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          Text("Max: ₹${item['max_price'] ?? 'N/A'}",
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
@@ -140,6 +127,19 @@ class _MandiScreenState extends State<MandiScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label, IconData icon) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: Colors.green[700]),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }

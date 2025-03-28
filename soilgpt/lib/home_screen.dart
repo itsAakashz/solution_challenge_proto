@@ -5,7 +5,7 @@ import 'login_screen.dart';
 import 'package:SoilGPT/contact_screen.dart';
 import 'package:SoilGPT/soilLens_screen.dart';
 import 'package:http/http.dart' as http;
-import 'package:SoilGPT/location_screen.dart';
+import 'location_screen.dart';
 import 'package:SoilGPT/mandi_screen.dart';
 import 'dart:convert';
 
