@@ -6,6 +6,7 @@ import 'package:SoilGPT/contact_screen.dart';
 import 'package:SoilGPT/soilLens_screen.dart';
 import 'package:http/http.dart' as http;
 import 'package:SoilGPT/location_screen.dart';
+import 'package:SoilGPT/mandi_screen.dart';
 import 'dart:convert';
 
 class HomeScreen extends StatefulWidget {
@@ -226,6 +227,8 @@ Suggest the best crop(s) along with reasons.
             _buildDrawerItem(Icons.contact_page, 'Contact',
                     () => Navigator.push(context, MaterialPageRoute(builder: (context) => ContactScreen()))),
             _buildDrawerItem(Icons.location_on, 'Set Location', _showLocationDialog),
+            _buildDrawerItem(Icons.shopping_cart_rounded, 'Mandi',
+                    () => Navigator.push(context, MaterialPageRoute(builder: (context) => MandiScreen()))),
             Divider(),
             _buildDrawerItem(Icons.logout, 'Logout', logout, color: Colors.red),
           ],
