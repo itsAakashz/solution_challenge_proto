@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:googleapis/shared.dart';
 import 'package:http/http.dart' as http;
 
 class MandiScreen extends StatefulWidget {
@@ -8,116 +9,236 @@ class MandiScreen extends StatefulWidget {
 }
 
 class _MandiScreenState extends State<MandiScreen> {
-  final String apiKey = "579b464db66ec23bdd000001f1ba15c97c9e48d373e6f663496f034b";
-  final String baseUrl = "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070";
+  final String apiKey = "AIzaSyCYjyGPPWcarkZFuIld4Xz6ZIjwitACP9o";
+  final String sheetId = "1ZwFVREtFYSU9eiIDDmxkUu9zjdCF9LRZcaFo9ITsOc4";
+  final String range = "Sheet1!A:D"; // Adjust according to your sheet structure
 
-  final TextEditingController stateController = TextEditingController();
-  final TextEditingController districtController = TextEditingController();
-  final TextEditingController marketController = TextEditingController();
-  final TextEditingController commodityController = TextEditingController();
+  List<Map<String, String>> mandiData = [];
 
-  List<dynamic> mandiData = [];
+  List<String> states = [];
+  List<String> filteredDistricts = [];
+  List<String> filteredMarkets = [];
+  List<String> filteredCommodities = [];
+
+  String? selectedState;
+  String? selectedDistrict;
+  String? selectedMarket;
+  String? selectedCommodity;
+
   bool isLoading = false;
+
+  Future<void> loadSheetData() async {
+    final url =
+        "https://sheets.googleapis.com/v4/spreadsheets/$sheetId/values/$range?key=$apiKey";
+
+    try {
+      final response = await http.get(Uri.parse(url));
+      print("API Response: ${response.body}"); // Debugging
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+
+        if (data.containsKey('values')) {
+          List<List<dynamic>> rows =
+          (data['values'] as List).map((row) => row is List ? row : [row]).toList();
+
+          if (rows.length > 1) {
+            List<Map<String, String>> tempMandiData = [];
+
+            for (int i = 1; i < rows.length; i++) {
+              if (rows[i].length >= 4) {
+                tempMandiData.add({
+                  "state": rows[i][0].toString(),
+                  "district": rows[i][1].toString(),
+                  "market": rows[i][2].toString(),
+                  "commodity": rows[i][3].toString(),
+                });
+              }
+            }
+
+            setState(() {
+              mandiData = tempMandiData;
+              states = mandiData.map((e) => e["state"]!).toSet().toList();
+            });
+
+            print("✅ States Loaded: $states");
+          } else {
+            print("❌ No data rows found.");
+          }
+        } else {
+          print("❌ No 'values' key in response.");
+        }
+      } else {
+        print("❌ Failed to load data: ${response.body}");
+      }
+    } catch (e) {
+      print("Error loading sheet data: $e");
+    }
+  }
+
+  void filterDistricts() {
+    if (selectedState != null) {
+      setState(() {
+        filteredDistricts = mandiData
+            .where((e) => e["state"] == selectedState)
+            .map((e) => e["district"]!)
+            .toSet()
+            .toList();
+        selectedDistrict = null;
+        selectedMarket = null;
+        selectedCommodity = null;
+        filteredMarkets = [];
+        filteredCommodities = [];
+      });
+    }
+  }
+
+  void filterMarkets() {
+    if (selectedDistrict != null) {
+      setState(() {
+        filteredMarkets = mandiData
+            .where((e) => e["state"] == selectedState && e["district"] == selectedDistrict)
+            .map((e) => e["market"]!)
+            .toSet()
+            .toList();
+        selectedMarket = null;
+        selectedCommodity = null;
+        filteredCommodities = [];
+      });
+    }
+  }
+
+  void filterCommodities() {
+    if (selectedMarket != null) {
+      setState(() {
+        filteredCommodities = mandiData
+            .where((e) =>
+        e["state"] == selectedState &&
+            e["district"] == selectedDistrict &&
+            e["market"] == selectedMarket)
+            .map((e) => e["commodity"]!)
+            .toSet()
+            .toList();
+        selectedCommodity = null;
+      });
+    }
+  }
+
+  Future<void> fetchData() async {
+    setState(() => isLoading = true);
+    final mandiApiKey ="579b464db66ec23bdd0000012713f4d953de4b7c719eaa034cc65f1a";
+    final String apiUrl =
+        "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070"
+        "?api-key=$mandiApiKey&format=json"
+        "&filters[state]=$selectedState"
+        "&filters[district]=$selectedDistrict"
+        "&filters[market]=$selectedMarket"
+        "&filters[commodity]=$selectedCommodity";
+
+
+    try {
+      print("🔍 Fetching: $apiUrl"); // Log API request URL
+
+      final response = await http.get(Uri.parse(apiUrl));
+      print("📩 Response Code: ${response.statusCode}");
+      print("📩 Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        if (data["records"] != null) {
+          setState(() {
+            mandiData = List<Map<String, String>>.from(data["records"]);
+          });
+        } else {
+          throw Exception("⚠️ No records found");
+        }
+      } else {
+        throw Exception("❌ HTTP Error: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("🔥 Error fetching Mandi data: $e");
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
 
   @override
   void initState() {
     super.initState();
-    stateController.text = "Bihar";
-    districtController.text = "Sheohar";
-    marketController.text = "Sheohar";
-    commodityController.text = "Rice";
-  }
-
-  Future<void> fetchData() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    String url = "$baseUrl?api-key=$apiKey&format=json"
-        "&filters[state.keyword]=${Uri.encodeComponent(stateController.text)}"
-        "&filters[district]=${Uri.encodeComponent(districtController.text)}"
-        "&filters[market]=${Uri.encodeComponent(marketController.text)}"
-        "&filters[commodity]=${Uri.encodeComponent(commodityController.text)}";
-
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        var data = json.decode(response.body);
-        setState(() {
-          mandiData = data["records"] ?? [];
-        });
-      } else {
-        throw Exception("Failed to load data");
-      }
-    } catch (e) {
-      print("Error fetching data: $e");
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
+    loadSheetData();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[50],
-      appBar: AppBar(
-        title: Text("Mandi Prices", style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.green[700],
-      ),
+      appBar: AppBar(title: Text("Mandi Prices"), backgroundColor: Colors.green[700],),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
           children: [
-            _buildTextField(stateController, "State", Icons.location_on),
-            SizedBox(height: 10),
-            _buildTextField(districtController, "District", Icons.map),
-            SizedBox(height: 10),
-            _buildTextField(marketController, "Market", Icons.store),
-            SizedBox(height: 10),
-            _buildTextField(commodityController, "Commodity", Icons.shopping_cart),
-            SizedBox(height: 20),
-
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[700],
-                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              onPressed: fetchData,
-              child: Text("Get Prices", style: TextStyle(fontSize: 18, color: Colors.white)),
+            DropdownButtonFormField<String>(
+              value: selectedState,
+              onChanged: (value) {
+                setState(() {
+                  selectedState = value;
+                  filterDistricts();
+                });
+              },
+              items: states.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+              decoration: InputDecoration(labelText: "State"),
             ),
-
+            DropdownButtonFormField<String>(
+              value: selectedDistrict,
+              onChanged: (value) {
+                setState(() {
+                  selectedDistrict = value;
+                  filterMarkets();
+                });
+              },
+              items: filteredDistricts.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+              decoration: InputDecoration(labelText: "District"),
+            ),
+            DropdownButtonFormField<String>(
+              value: selectedMarket,
+              onChanged: (value) {
+                setState(() {
+                  selectedMarket = value;
+                  filterCommodities();
+                });
+              },
+              items: filteredMarkets.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+              decoration: InputDecoration(labelText: "Market"),
+            ),
+            DropdownButtonFormField<String>(
+              value: selectedCommodity,
+              onChanged: (value) => setState(() => selectedCommodity = value),
+              items: filteredCommodities.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+              decoration: InputDecoration(labelText: "Commodity"),
+            ),
             SizedBox(height: 20),
-
-            if (isLoading) CircularProgressIndicator(color: Colors.green[700]),
-
+            ElevatedButton(onPressed: fetchData, child: Text("Get Prices", style: TextStyle(color: Colors.white),),style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green[700])),
+            SizedBox(height: 20),
+            if (isLoading) CircularProgressIndicator(),
             Expanded(
               child: mandiData.isEmpty
-                  ? Center(child: Text("No data available", style: TextStyle(fontSize: 16)))
+                  ? Center(child: Text("No data available"))
                   : ListView.builder(
                 itemCount: mandiData.length,
                 itemBuilder: (context, index) {
                   var item = mandiData[index];
                   return Card(
-                    color: Colors.green[100],
-                    elevation: 5,
+                    elevation: 3,
                     margin: EdgeInsets.symmetric(vertical: 8),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     child: ListTile(
-                      contentPadding: EdgeInsets.all(16),
-                      title: Text("${item['commodity']} - ${item['variety'] ?? 'N/A'}",
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text("Market: ${item['market']}",
-                          style: TextStyle(color: Colors.black54)),
+                      title: Text("${item['commodity']} - ${item['variety'] ?? 'N/A'}"),
+                      subtitle: Text("Market: ${item['market']}"),
                       trailing: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text("Min: ₹${item['min_price'] ?? 'N/A'}",
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                          Text("Max: ₹${item['max_price'] ?? 'N/A'}",
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          Text("Min: ₹${item['min_price'] ?? 'N/A'}"),
+                          Text("Max: ₹${item['max_price'] ?? 'N/A'}"),
                         ],
                       ),
                     ),
@@ -127,19 +248,6 @@ class _MandiScreenState extends State<MandiScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: Colors.green[700]),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }

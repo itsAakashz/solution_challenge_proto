@@ -35,6 +35,8 @@ dependencies:
   shared_preferences: ^2.2.2
   url_launcher: ^6.2.1
   image_picker: ^1.0.7
+  googleapis: ^11.3.0
+  googleapis_auth: ^1.4.1
 
 
   # The following adds the Cupertino Icons font to your application.

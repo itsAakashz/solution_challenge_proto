@@ -227,7 +227,7 @@ Suggest the best crop(s) along with reasons.
             _buildDrawerItem(Icons.contact_page, 'Contact',
                     () => Navigator.push(context, MaterialPageRoute(builder: (context) => ContactScreen()))),
             _buildDrawerItem(Icons.location_on, 'Set Location', _showLocationDialog),
-            _buildDrawerItem(Icons.shopping_cart_rounded, 'Mandi',
+            _buildDrawerItem(Icons.shopping_cart_rounded, 'Mandi Price',
                     () => Navigator.push(context, MaterialPageRoute(builder: (context) => MandiScreen()))),
             Divider(),
             _buildDrawerItem(Icons.logout, 'Logout', logout, color: Colors.red),
