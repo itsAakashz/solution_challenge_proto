@@ -54,6 +54,24 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => isLoading = false);
   }
 
+  Future<void> resetPassword() async {
+    String email = emailController.text.trim();
+
+    if (email.isEmpty) {
+      showError("Please enter your email to reset password.");
+      return;
+    }
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Password reset email sent!"), backgroundColor: Colors.green),
+      );
+    } catch (e) {
+      showError("Error: ${e.toString()}");
+    }
+  }
+
   void showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.red),
@@ -77,6 +95,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 _buildTextField(emailController, "Email", Icons.email, false),
                 SizedBox(height: 10),
                 _buildTextField(passwordController, "Password", Icons.lock, true),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: resetPassword,
+                    child: Text("Forgot Password?", style: TextStyle(color: Colors.green[800], fontSize: 16)),
+                  ),
+                ),
                 SizedBox(height: 20),
                 isLoading
                     ? CircularProgressIndicator()
