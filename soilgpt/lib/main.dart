@@ -100,7 +100,7 @@ class _SplashScreenState extends State<SplashScreen>
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.green.shade100, Colors.green.shade200], // Light green gradient
+            colors: [Colors.green.shade100, Colors.green.shade200],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -142,11 +142,6 @@ class _SplashScreenState extends State<SplashScreen>
                     fontStyle: FontStyle.italic,
                   ),
                 ),
-              ),
-              SizedBox(height: 30),
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.green.shade700),
-                strokeWidth: 3,
               ),
             ],
           ),
