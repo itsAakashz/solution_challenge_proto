@@ -37,7 +37,7 @@ dependencies:
   image_picker: ^1.0.7
   googleapis: ^11.3.0
   googleapis_auth: ^1.4.1
-
+  file_selector_windows: ^0.9.3+4  # Use the suggested version
 
 
   # The following adds the Cupertino Icons font to your application.
