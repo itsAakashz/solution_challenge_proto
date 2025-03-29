@@ -49,7 +49,6 @@ class _RegisterScreenState extends State<RegisterScreen>
       return;
     }
 
-    // Improved email validation using regex
     final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
     if (!emailRegex.hasMatch(email)) {
       _showSnackbar("Please enter a valid email address", Colors.red);
@@ -69,18 +68,13 @@ class _RegisterScreenState extends State<RegisterScreen>
         password: password,
       );
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .set({'email': email});
+      // Send email verification
+      await userCredential.user!.sendEmailVerification();
+      _showSnackbar("A verification email has been sent. Please verify your email.", Colors.blue);
 
-      _showSnackbar("Account created successfully!", Colors.green);
-      await Future.delayed(Duration(seconds: 2));
+      // Start checking for email verification
+      _checkEmailVerified(userCredential.user!);
 
-      if (mounted) {
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => LoginScreen()));
-      }
     } on FirebaseAuthException catch (e) {
       String errorMessage = "An error occurred. Please try again.";
       if (e.code == 'email-already-in-use') {
@@ -93,6 +87,30 @@ class _RegisterScreenState extends State<RegisterScreen>
       _showSnackbar(errorMessage, Colors.red);
     } finally {
       setState(() => isLoading = false);
+    }
+  }
+
+  void _checkEmailVerified(User user) async {
+    // Keep checking until the user verifies the email
+    while (true) {
+      await Future.delayed(Duration(seconds: 3)); // Check every 3 seconds
+      await user.reload();
+      if (user.emailVerified) {
+        // Save user to Firestore after email verification
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .set({'email': user.email});
+
+        _showSnackbar("Email verified! Redirecting to login...", Colors.green);
+        await Future.delayed(Duration(seconds: 2));
+
+        if (mounted) {
+          Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (context) => LoginScreen()));
+        }
+        break; // Stop checking once verified
+      }
     }
   }
 
