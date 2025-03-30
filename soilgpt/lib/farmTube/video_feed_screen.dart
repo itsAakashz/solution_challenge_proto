@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:share/share.dart';
+import 'package:share_plus/share_plus.dart';
 
-def main() {
+void main() {
   runApp(MyApp());
 }
 
@@ -140,7 +140,7 @@ class _VideoItemState extends State<VideoItem> {
   }
 
   void _shareVideo() {
-    Share.share(widget.videoUrl, subject: "Check out this video: ${widget.title}");
+    Share.share(widget.videoUrl);
   }
 
   @override
