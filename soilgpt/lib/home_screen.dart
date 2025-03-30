@@ -5,7 +5,6 @@ import 'login_screen.dart';
 import 'package:SoilGPT/contact_screen.dart';
 import 'package:SoilGPT/soilLens_screen.dart';
 import 'package:http/http.dart' as http;
-import 'location_screen.dart';
 import 'package:SoilGPT/mandi_screen.dart';
 import 'dart:convert';
 import 'package:SoilGPT/farmTube/video_feed_screen.dart';
@@ -225,7 +224,7 @@ Suggest the best crop(s) along with reasons.
             ),
             _buildDrawerItem(Icons.home, 'Home', () => Navigator.pop(context)),
             _buildDrawerItem(Icons.cast_for_education, 'AgriEdu',
-                    () => Navigator.push(context, MaterialPageRoute(builder: (context) =>  ChatScreen(receiverName: '', receiverId: '',)))),
+                    () => Navigator.push(context, MaterialPageRoute(builder: (context) => AgriEduScreen()))),
             _buildDrawerItem(Icons.camera_alt, 'Soil Lens',
                     () => Navigator.push(context, MaterialPageRoute(builder: (context) => SoilLensScreen()))),
             _buildDrawerItem(Icons.shopping_cart_rounded, 'Mandi Price',
