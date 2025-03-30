@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
-import 'package:animate_do/animate_do.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -19,154 +17,250 @@ class _LoginScreenState extends State<LoginScreen> {
   bool showPassword = false;
 
   Future<void> login() async {
-    String email = emailController.text.trim();
-    String password = passwordController.text.trim();
+    final String email = emailController.text.trim();
+    final String password = passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      showError("Please enter both email and password.");
+      _showSnackbar("Please enter an email and password", Colors.red);
       return;
     }
 
     setState(() => isLoading = true);
 
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
 
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isLoggedIn', true);
-      await prefs.setString('email', email);
+      User? user = userCredential.user;
+      await user?.reload();
 
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => HomeScreen()));
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        showError("No user found with this email.");
-      } else if (e.code == 'wrong-password') {
-        showError("Incorrect password. Try again.");
+      if (user != null && user.emailVerified) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .set({'email': user.email}, SetOptions(merge: true));
+
+        _showSnackbar("Login successful!", Colors.green);
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => HomeScreen()));
       } else {
-        showError(e.message ?? "Login failed.");
+        await FirebaseAuth.instance.signOut();
+        _showResendVerificationDialog(user!);
       }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = "An error occurred. Please try again.";
+      if (e.code == 'user-not-found') {
+        errorMessage = "No user found with this email.";
+      } else if (e.code == 'wrong-password') {
+        errorMessage = "Incorrect password. Please try again.";
+      }
+      _showSnackbar(errorMessage, Colors.red);
+    } finally {
+      setState(() => isLoading = false);
     }
-
-    setState(() => isLoading = false);
   }
 
-  Future<void> resetPassword() async {
-    String email = emailController.text.trim();
-
-    if (email.isEmpty) {
-      showError("Please enter your email to reset password.");
-      return;
-    }
-
+  Future<void> signInWithGoogle() async {
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Password reset email sent!"), backgroundColor: Colors.green),
+      setState(() => isLoading = true);
+
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() => isLoading = false);
+        return;
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+      await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
+
+      UserCredential userCredential =
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      User? user = userCredential.user;
+      if (user != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .set({'email': user.email, 'name': user.displayName},
+            SetOptions(merge: true));
+
+        _showSnackbar("Google Sign-In successful!", Colors.green);
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => HomeScreen()));
+      }
     } catch (e) {
-      showError("Error: ${e.toString()}");
+      _showSnackbar("Google Sign-In failed. Try again.", Colors.red);
+    } finally {
+      setState(() => isLoading = false);
     }
   }
 
-  void showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.green[50],
-      body: FadeIn(
-        duration: Duration(milliseconds: 600),
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("SOIL GPT", style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.green[800])),
-                SizedBox(height: 30),
-                _buildTextField(emailController, "Email", Icons.email, false),
-                SizedBox(height: 10),
-                _buildTextField(passwordController, "Password", Icons.lock, true),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: resetPassword,
-                    child: Text("Forgot Password?", style: TextStyle(color: Colors.green[800], fontSize: 16)),
-                  ),
-                ),
-                SizedBox(height: 20),
-                isLoading
-                    ? CircularProgressIndicator()
-                    : Column(
-                  children: [
-                    _buildButton("Login", Colors.green[700]!, Colors.white, login),
-                    SizedBox(height: 10),
-                    _buildGoogleButton(),
-                  ],
-                ),
-                TextButton(
-                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterScreen())),
-                  child: Text("Create an account", style: TextStyle(color: Colors.green[800], fontSize: 16)),
-                ),
-              ],
-            ),
+  void _showResendVerificationDialog(User user) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Email Not Verified"),
+        content: Text("Please verify your email before logging in."),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await user.sendEmailVerification();
+              Navigator.pop(context);
+              _showSnackbar(
+                  "Verification email sent! Check your inbox.", Colors.blue);
+            },
+            child: Text("Resend Email"),
           ),
-        ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("OK"),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon, bool isPassword) {
+  void _showSnackbar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: color),
+    );
+  }
+
+  // This is the merged _buildTextField method.
+  Widget _buildTextField(TextEditingController controller, String label, bool isPassword) {
     return TextField(
       controller: controller,
       obscureText: isPassword && !showPassword,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        filled: true,
-        fillColor: Colors.white,
-        prefixIcon: Icon(icon, color: Colors.green[700]),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         suffixIcon: isPassword
             ? IconButton(
-          icon: Icon(showPassword ? Icons.visibility : Icons.visibility_off, color: Colors.green[700]),
-          onPressed: () => setState(() => showPassword = !showPassword),
+          icon: Icon(showPassword ? Icons.visibility : Icons.visibility_off),
+          onPressed: () {
+            setState(() {
+              showPassword = !showPassword;
+            });
+          },
         )
             : null,
       ),
     );
   }
 
-  Widget _buildButton(String text, Color color, Color textColor, VoidCallback onPressed) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 100),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.green[100],
+      body: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 400),
+              child: Card(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+                elevation: 6,
+                color: Colors.white,
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.lock, size: 80, color: Colors.green[700]),
+                      SizedBox(height: 10),
+                      Text("Login",
+                          style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green[800])),
+                      SizedBox(height: 20),
+                      _buildTextField(emailController, "Email", false),
+                      SizedBox(height: 10),
+                      _buildTextField(passwordController, "Password", true),
+                      SizedBox(height: 20),
+                      isLoading
+                          ? CircularProgressIndicator(color: Colors.green)
+                          : Column(
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: login,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green[700],
+                                shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                    BorderRadius.circular(10)),
+                                padding:
+                                EdgeInsets.symmetric(vertical: 12),
+                              ),
+                              child: Text("Login",
+                                  style: TextStyle(
+                                      fontSize: 18, color: Colors.white)),
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Text("OR", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green[700])),
+                          SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: signInWithGoogle,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                    BorderRadius.circular(8)),
+                                padding:
+                                EdgeInsets.symmetric(vertical: 6),
+                                side: BorderSide(
+                                    color: Colors.green, width: 1),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Image.asset("assets/google_logo.png",
+                                      height: 18),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    "Google Sign-In",
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.green[700]),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => RegisterScreen()),
+                          );
+                        },
+                        child: Text(
+                          "Don't have an account? Register here.",
+                          style: TextStyle(color: Colors.green[700], fontSize: 16),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
-      child: Text(text, style: TextStyle(fontSize: 18, color: textColor)),
-    );
-  }
-
-  Widget _buildGoogleButton() {
-    return ElevatedButton.icon(
-      onPressed: () {}, // Add Google Sign-In function
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-        elevation: 2,
-      ),
-      icon: Image.asset('assets/images/google_logo.png', height: 24, errorBuilder: (context, error, stackTrace) => Icon(Icons.error)),
-      label: Text("Sign in with Google", style: TextStyle(color: Colors.black, fontSize: 16)),
     );
   }
 }
