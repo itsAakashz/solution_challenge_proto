@@ -1,9 +1,10 @@
-import 'package:SoilGPT/farmTube/upload_video_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:share_plus/share_plus.dart';
+import 'upload_video_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -27,7 +28,7 @@ class ShortVideoFeed extends StatefulWidget {
 
 class _ShortVideoFeedState extends State<ShortVideoFeed> {
   final PageController _pageController = PageController();
-  List<Map<String, String>> videos = [];
+  List<Map<String, dynamic>> videos = [];
   bool _isLoading = true;
 
   @override
@@ -38,13 +39,17 @@ class _ShortVideoFeedState extends State<ShortVideoFeed> {
 
   Future<void> _initVideos() async {
     try {
-      final ListResult result =
-      await FirebaseStorage.instance.ref('videos/').listAll();
-      final List<Map<String, String>> videoData = await Future.wait(result.items.map((ref) async {
-        String url = await ref.getDownloadURL();
-        String title = ref.name.split('.')[0]; // Extract title from file name
-        return {'url': url, 'title': title, 'description': 'Sample description for $title'};
-      }));
+      QuerySnapshot querySnapshot =
+      await FirebaseFirestore.instance.collection('videos').orderBy('timestamp', descending: true).get();
+
+      final List<Map<String, dynamic>> videoData = querySnapshot.docs.map((doc) {
+        return {
+          'url': doc['videoUrl'] as String,
+          'title': doc['title'] as String,
+          'description': doc['description'] as String,
+          'username': doc['username'] ?? 'Unknown',
+        };
+      }).toList();
 
       setState(() {
         videos = videoData;
@@ -92,6 +97,7 @@ class _ShortVideoFeedState extends State<ShortVideoFeed> {
             videoUrl: videos[index]['url']!,
             title: videos[index]['title']!,
             description: videos[index]['description']!,
+            username: videos[index]['username']!,
           );
         },
       ),
@@ -103,8 +109,9 @@ class VideoItem extends StatefulWidget {
   final String videoUrl;
   final String title;
   final String description;
+  final String username;
 
-  VideoItem({required this.videoUrl, required this.title, required this.description});
+  VideoItem({required this.videoUrl, required this.title, required this.description, required this.username});
 
   @override
   _VideoItemState createState() => _VideoItemState();
@@ -167,7 +174,7 @@ class _VideoItemState extends State<VideoItem> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '@username',
+                  '@${widget.username}',
                   style: TextStyle(
                     color: Colors.black,
                     fontSize: 16,
