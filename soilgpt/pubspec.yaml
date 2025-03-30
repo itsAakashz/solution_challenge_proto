@@ -42,6 +42,8 @@ dependencies:
   chewie: ^1.11.0
   firebase_storage: ^12.4.4
   provider: ^6.1.4
+  extension_google_sign_in_as_googleapis_auth: ^2.0.0
+  
 
 
 

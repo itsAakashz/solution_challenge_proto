@@ -1,29 +1,101 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:chewie/chewie.dart';
 import 'package:video_player/video_player.dart';
-import 'firebase_service.dart';
+import 'package:chewie/chewie.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:googleapis/storage/v1.dart';
+import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
 
-class VideoFeedScreen extends StatelessWidget {
-  final FirebaseService _firebaseService = FirebaseService();
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Short Video Feed',
+      home: ShortVideoFeed(),
+    );
+  }
+}
+
+class ShortVideoFeed extends StatefulWidget {
+  @override
+  _ShortVideoFeedState createState() => _ShortVideoFeedState();
+}
+
+class _ShortVideoFeedState extends State<ShortVideoFeed> {
+  final PageController _pageController = PageController();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: [
+      'https://www.googleapis.com/auth/cloud-platform',
+    ],
+  );
+
+  List<String> videoUrls = [];
+  int _currentPage = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initVideos();
+  }
+
+  Future<void> _initVideos() async {
+    try {
+      final storage = await _getStorageClient();
+      final bucketName = 'soilgpt';
+
+      var objects = await storage.objects.list(bucketName);
+      var urls = objects.items!
+          .where((item) => item.name!.endsWith('.mp4'))
+          .map((item) => 'https://storage.googleapis.com/$bucketName/${item.name}')
+          .toList();
+
+      setState(() {
+        videoUrls = urls;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching videos: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<StorageApi> _getStorageClient() async {
+    final user = await _googleSignIn.signInSilently() ?? await _googleSignIn.signIn();
+    if (user == null) throw Exception('User not signed in');
+
+    final authClient = await _googleSignIn.authenticatedClient();
+    if (authClient == null) throw Exception('Failed to get authenticated client');
+
+    return StorageApi(authClient);
+  }
+
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("FarmTube"),  backgroundColor: Colors.green[700],),
-
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _firebaseService.getVideos(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
-
-          var videos = snapshot.data!.docs;
-          return ListView.builder(
-            itemCount: videos.length,
-            itemBuilder: (context, index) {
-              var video = videos[index];
-              return VideoCard(video: video);
-            },
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : PageView.builder(
+        controller: _pageController,
+        scrollDirection: Axis.vertical,
+        itemCount: videoUrls.length,
+        onPageChanged: (index) {
+          setState(() => _currentPage = index);
+        },
+        itemBuilder: (context, index) {
+          return VideoItem(
+            videoUrl: videoUrls[index],
+            isCurrent: index == _currentPage,
           );
         },
       ),
@@ -31,66 +103,96 @@ class VideoFeedScreen extends StatelessWidget {
   }
 }
 
-class VideoCard extends StatefulWidget {
-  final QueryDocumentSnapshot video;
-  VideoCard({required this.video});
+class VideoItem extends StatefulWidget {
+  final String videoUrl;
+  final bool isCurrent;
+
+  VideoItem({required this.videoUrl, required this.isCurrent});
 
   @override
-  _VideoCardState createState() => _VideoCardState();
+  _VideoItemState createState() => _VideoItemState();
 }
 
-class _VideoCardState extends State<VideoCard> {
+class _VideoItemState extends State<VideoItem> {
   late VideoPlayerController _videoController;
-  late ChewieController _chewieController;
-  final FirebaseService _firebaseService = FirebaseService();
+  ChewieController? _chewieController;
 
   @override
   void initState() {
     super.initState();
-    _videoController = VideoPlayerController.network(widget.video['videoUrl'])
-      ..initialize().then((_) {
-        setState(() {});
-      });
-    _chewieController = ChewieController(videoPlayerController: _videoController, autoPlay: false, looping: true);
+    _initializeVideo();
+  }
+
+  void _initializeVideo() async {
+    _videoController = VideoPlayerController.network(widget.videoUrl);
+    await _videoController.initialize();
+
+    _chewieController = ChewieController(
+      videoPlayerController: _videoController,
+      autoPlay: true,
+      looping: true,
+      showControls: false,
+      allowFullScreen: false,
+    );
+
+    if (!widget.isCurrent) {
+      _videoController.pause();
+    }
+
+    setState(() {});
+  }
+
+  @override
+  void didUpdateWidget(VideoItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isCurrent && !_videoController.value.isPlaying) {
+      _videoController.play();
+    } else if (!widget.isCurrent && _videoController.value.isPlaying) {
+      _videoController.pause();
+    }
   }
 
   @override
   void dispose() {
     _videoController.dispose();
-    _chewieController.dispose();
+    _chewieController?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.all(10),
-      child: Column(
+    if (_chewieController == null || !_videoController.value.isInitialized) {
+      return Center(child: CircularProgressIndicator());
+    }
+
+    return GestureDetector(
+      onTap: () {
+        if (_videoController.value.isPlaying) {
+          _videoController.pause();
+        } else {
+          _videoController.play();
+        }
+      },
+      child: Stack(
         children: [
-          _videoController.value.isInitialized
-              ? Chewie(controller: _chewieController)
-              : Center(child: CircularProgressIndicator()),
-          Padding(
-            padding: EdgeInsets.all(8),
+          Chewie(controller: _chewieController!),
+          Positioned(
+            bottom: 20,
+            left: 20,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.video['title'], style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.thumb_up),
-                      onPressed: () => _firebaseService.likeVideo(widget.video.id),
-                    ),
-                    Text("${widget.video['likes']} Likes"),
-                  ],
+                Text(
+                  '@username',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                Text("Comments:"),
-                ...List.generate(widget.video['comments'].length, (i) => Text("- ${widget.video['comments'][i]}")),
-                TextField(
-                  onSubmitted: (comment) => _firebaseService.addComment(widget.video.id, comment),
-                  decoration: InputDecoration(labelText: "Add a comment"),
+                Text(
+                  'Video Description',
+                  style: TextStyle(color: Colors.white),
                 ),
               ],
             ),

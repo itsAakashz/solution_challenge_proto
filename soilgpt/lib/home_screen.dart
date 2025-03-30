@@ -225,7 +225,7 @@ Suggest the best crop(s) along with reasons.
             ),
             _buildDrawerItem(Icons.home, 'Home', () => Navigator.pop(context)),
             _buildDrawerItem(Icons.cast_for_education, 'AgriEdu',
-                    () => Navigator.push(context, MaterialPageRoute(builder: (context) => VideoFeedScreen()))),
+                    () => Navigator.push(context, MaterialPageRoute(builder: (context) => ShortVideoFeed()))),
             _buildDrawerItem(Icons.camera_alt, 'Soil Lens',
                     () => Navigator.push(context, MaterialPageRoute(builder: (context) => SoilLensScreen()))),
             _buildDrawerItem(Icons.shopping_cart_rounded, 'Mandi Price',
@@ -233,7 +233,7 @@ Suggest the best crop(s) along with reasons.
             _buildDrawerItem(Icons.contact_page, 'Contact',
                     () => Navigator.push(context, MaterialPageRoute(builder: (context) => ContactScreen()))),
             _buildDrawerItem(Icons.ondemand_video_outlined, 'FarmTube',
-                    () => Navigator.push(context, MaterialPageRoute(builder: (context) => VideoFeedScreen()))),
+                    () => Navigator.push(context, MaterialPageRoute(builder: (context) => ShortVideoFeed()))),
             _buildDrawerItem(Icons.location_on, 'Set Location', _showLocationDialog),
 
             Divider(),
