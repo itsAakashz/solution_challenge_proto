@@ -169,7 +169,7 @@ class _VideoItemState extends State<VideoItem> {
                 Text(
                   '@username',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Colors.black,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -177,14 +177,14 @@ class _VideoItemState extends State<VideoItem> {
                 Text(
                   widget.title,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Colors.black,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   widget.description,
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: Colors.black),
                 ),
               ],
             ),

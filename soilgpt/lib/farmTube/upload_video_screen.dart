@@ -11,7 +11,7 @@ class UploadVideoScreen extends StatefulWidget {
 class _UploadVideoScreenState extends State<UploadVideoScreen> {
   File? _video;
   bool _isUploading = false;
-  String? _downloadUrl;
+  double _uploadProgress = 0;
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
@@ -32,32 +32,35 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
 
     setState(() {
       _isUploading = true;
+      _uploadProgress = 0;
     });
 
     try {
-      // Generate unique file name
-      String fileName = 'videos/${DateTime.now().millisecondsSinceEpoch}.mp4';
+      String sanitizedTitle = _titleController.text.replaceAll(RegExp(r'[^\w\s]'), '').replaceAll(' ', '_');
+      String fileName = 'videos/$sanitizedTitle.mp4';
       Reference storageRef = FirebaseStorage.instance.ref().child(fileName);
 
-      // Upload video
       UploadTask uploadTask = storageRef.putFile(_video!);
-      TaskSnapshot taskSnapshot = await uploadTask;
 
-      // Get download URL
-      String videoUrl = await taskSnapshot.ref.getDownloadURL();
-      setState(() {
-        _downloadUrl = videoUrl;
+      // Track progress
+      uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+        double progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setState(() {
+          _uploadProgress = progress;
+        });
       });
 
-      print('✅ Upload successful: $videoUrl');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Video uploaded successfully!")));
+      await uploadTask;
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("✅ Video uploaded successfully!")));
     } catch (e) {
       print('❌ Upload failed: $e');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to upload video")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("❌ Failed to upload video")));
     } finally {
       setState(() {
         _isUploading = false;
         _video = null;
+        _uploadProgress = 0;
         _titleController.clear();
         _descriptionController.clear();
       });
@@ -85,25 +88,26 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
             ),
             SizedBox(height: 20),
             _video != null
-                ? Text("Video Selected")
+                ? Text("✅ Video Selected")
                 : ElevatedButton(
               onPressed: _pickVideo,
               child: Text("Pick Video"),
             ),
             SizedBox(height: 20),
             _isUploading
-                ? CircularProgressIndicator()
+                ? Column(
+              children: [
+                CircularProgressIndicator(value: _uploadProgress / 100),
+                SizedBox(height: 10),
+                Text("${_uploadProgress.toStringAsFixed(0)}% Uploaded"),
+              ],
+            )
                 : _video != null
                 ? ElevatedButton(
               onPressed: _uploadVideo,
               child: Text("Upload Video"),
             )
                 : Container(),
-            if (_downloadUrl != null) ...[
-              SizedBox(height: 20),
-              Text("Download URL:", style: TextStyle(fontWeight: FontWeight.bold)),
-              SelectableText(_downloadUrl ?? ""),
-            ]
           ],
         ),
       ),
