@@ -1,11 +1,11 @@
+import 'package:SoilGPT/farmTube/upload_video_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:googleapis/storage/v1.dart';
-import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:share/share.dart';
 
-void main() {
+def main() {
   runApp(MyApp());
 }
 
@@ -14,6 +14,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Short Video Feed',
+      theme: ThemeData.dark(),
       home: ShortVideoFeed(),
     );
   }
@@ -26,14 +27,7 @@ class ShortVideoFeed extends StatefulWidget {
 
 class _ShortVideoFeedState extends State<ShortVideoFeed> {
   final PageController _pageController = PageController();
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: [
-      'https://www.googleapis.com/auth/cloud-platform',
-    ],
-  );
-
-  List<String> videoUrls = [];
-  int _currentPage = 0;
+  List<Map<String, String>> videos = [];
   bool _isLoading = true;
 
   @override
@@ -44,35 +38,23 @@ class _ShortVideoFeedState extends State<ShortVideoFeed> {
 
   Future<void> _initVideos() async {
     try {
-      final storage = await _getStorageClient();
-      final bucketName = 'soilgpt';
-
-      var objects = await storage.objects.list(bucketName);
-      var urls = objects.items!
-          .where((item) => item.name!.endsWith('.mp4'))
-          .map((item) => 'https://storage.googleapis.com/$bucketName/${item.name}')
-          .toList();
+      final ListResult result =
+      await FirebaseStorage.instance.ref('videos/').listAll();
+      final List<Map<String, String>> videoData = await Future.wait(result.items.map((ref) async {
+        String url = await ref.getDownloadURL();
+        String title = ref.name.split('.')[0]; // Extract title from file name
+        return {'url': url, 'title': title, 'description': 'Sample description for $title'};
+      }));
 
       setState(() {
-        videoUrls = urls;
-        _isLoading = false;
+        videos = videoData;
       });
     } catch (e) {
       print('Error fetching videos: $e');
+    } finally {
       setState(() => _isLoading = false);
     }
   }
-
-  Future<StorageApi> _getStorageClient() async {
-    final user = await _googleSignIn.signInSilently() ?? await _googleSignIn.signIn();
-    if (user == null) throw Exception('User not signed in');
-
-    final authClient = await _googleSignIn.authenticatedClient();
-    if (authClient == null) throw Exception('Failed to get authenticated client');
-
-    return StorageApi(authClient);
-  }
-
 
   @override
   void dispose() {
@@ -83,19 +65,33 @@ class _ShortVideoFeedState extends State<ShortVideoFeed> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Short Video Feed'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => UploadVideoScreen()),
+              ).then((_) => _initVideos());
+            },
+          ),
+        ],
+      ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
+          : videos.isEmpty
+          ? Center(child: Text('No videos available'))
           : PageView.builder(
         controller: _pageController,
         scrollDirection: Axis.vertical,
-        itemCount: videoUrls.length,
-        onPageChanged: (index) {
-          setState(() => _currentPage = index);
-        },
+        itemCount: videos.length,
         itemBuilder: (context, index) {
           return VideoItem(
-            videoUrl: videoUrls[index],
-            isCurrent: index == _currentPage,
+            videoUrl: videos[index]['url']!,
+            title: videos[index]['title']!,
+            description: videos[index]['description']!,
           );
         },
       ),
@@ -105,9 +101,10 @@ class _ShortVideoFeedState extends State<ShortVideoFeed> {
 
 class VideoItem extends StatefulWidget {
   final String videoUrl;
-  final bool isCurrent;
+  final String title;
+  final String description;
 
-  VideoItem({required this.videoUrl, required this.isCurrent});
+  VideoItem({required this.videoUrl, required this.title, required this.description});
 
   @override
   _VideoItemState createState() => _VideoItemState();
@@ -126,30 +123,13 @@ class _VideoItemState extends State<VideoItem> {
   void _initializeVideo() async {
     _videoController = VideoPlayerController.network(widget.videoUrl);
     await _videoController.initialize();
-
     _chewieController = ChewieController(
       videoPlayerController: _videoController,
       autoPlay: true,
       looping: true,
       showControls: false,
-      allowFullScreen: false,
     );
-
-    if (!widget.isCurrent) {
-      _videoController.pause();
-    }
-
     setState(() {});
-  }
-
-  @override
-  void didUpdateWidget(VideoItem oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isCurrent && !_videoController.value.isPlaying) {
-      _videoController.play();
-    } else if (!widget.isCurrent && _videoController.value.isPlaying) {
-      _videoController.pause();
-    }
   }
 
   @override
@@ -157,6 +137,10 @@ class _VideoItemState extends State<VideoItem> {
     _videoController.dispose();
     _chewieController?.dispose();
     super.dispose();
+  }
+
+  void _shareVideo() {
+    Share.share(widget.videoUrl, subject: "Check out this video: ${widget.title}");
   }
 
   @override
@@ -177,7 +161,7 @@ class _VideoItemState extends State<VideoItem> {
         children: [
           Chewie(controller: _chewieController!),
           Positioned(
-            bottom: 20,
+            bottom: 60,
             left: 20,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,10 +175,27 @@ class _VideoItemState extends State<VideoItem> {
                   ),
                 ),
                 Text(
-                  'Video Description',
+                  widget.title,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  widget.description,
                   style: TextStyle(color: Colors.white),
                 ),
               ],
+            ),
+          ),
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: FloatingActionButton(
+              backgroundColor: Colors.white,
+              child: Icon(Icons.share, color: Colors.black),
+              onPressed: _shareVideo,
             ),
           ),
         ],
