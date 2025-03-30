@@ -1,63 +1,72 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
-class AgriEduScreen extends StatefulWidget {
-  @override
-  _GenreListScreenState createState() => _GenreListScreenState();
-}
+class AgriEduScreen extends StatelessWidget {
+  final List<Map<String, String>> topics = [
+    {
+      "title": "Sustainable Farming Practices",
+      "url": "https://example.com/sustainable-farming"
+    },
+    {
+      "title": "Seed Buying Guides",
+      "url": "https://example.com/seed-buying-guide"
+    },
+    {
+      "title": "Alternatives to Chemical Fertilizers",
+      "url": "https://example.com/organic-fertilizers"
+    },
+    {
+      "title": "Agricultural Waste Management",
+      "url": "https://example.com/waste-management"
+    },
+  ];
 
-class _GenreListScreenState extends State<AgriEduScreen> {
-  late Future<List<dynamic>> _genres;
-
-  @override
-  void initState() {
-    super.initState();
-    _genres = fetchGenres();  // Fetch data when the screen loads
-  }
-
-  // Define fetchGenres method
-  Future<List<dynamic>> fetchGenres() async {
-    final url = "https://raw.githubusercontent.com/itsAakashz/solution_challenge_proto/main/soilgpt/assets/articleGenre.json";
-
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = json.decode(response.body);
-      return data['genre']; // Extract the 'genre' array
-    } else {
-      throw Exception('Failed to load genres');
-    }
+  void _openLink(BuildContext context, String url) {
+    // Implement webview or url_launcher
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Opening: $url")),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Article Genres")),
-      body: FutureBuilder<List<dynamic>>(
-        future: _genres,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text("Error loading genres"));
-          } else {
-            List<dynamic> genres = snapshot.data!;
-            return ListView.builder(
-              itemCount: genres.length,
-              itemBuilder: (context, index) {
-                final genre = genres[index];
-                return ListTile(
-                  title: Text(genre['title']),
-                  subtitle: Text(genre['url']),
-                  onTap: () {
-                    // Open article URL
-                  },
-                );
-              },
+      appBar: AppBar(title: Text("AgriEdu - Learn Agriculture")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ListView.builder(
+          itemCount: topics.length,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: InkWell(
+                onTap: () => _openLink(context, topics[index]["url"]!),
+                child: Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green[100],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.article, color: Colors.green[700]),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          topics[index]["title"]!,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green[900],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             );
-          }
-        },
+          },
+        ),
       ),
     );
   }
