@@ -11,6 +11,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen>
     with SingleTickerProviderStateMixin {
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
@@ -34,6 +35,7 @@ class _RegisterScreenState extends State<RegisterScreen>
 
   @override
   void dispose() {
+    usernameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     _animationController.dispose();
@@ -41,11 +43,12 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   Future<void> register() async {
+    final String username = usernameController.text.trim();
     final String email = emailController.text.trim();
     final String password = passwordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
-      _showSnackbar("Please enter an email and password", Colors.red);
+    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+      _showSnackbar("Please fill in all fields", Colors.red);
       return;
     }
 
@@ -60,8 +63,22 @@ class _RegisterScreenState extends State<RegisterScreen>
       return;
     }
 
+    if (username.length < 3) {
+      _showSnackbar("Username must be at least 3 characters long", Colors.red);
+      return;
+    }
+
     setState(() => isLoading = true);
+
     try {
+      // Check if username already exists
+      bool usernameExists = await _checkUsernameExists(username);
+      if (usernameExists) {
+        _showSnackbar("Username is already taken, choose another", Colors.red);
+        setState(() => isLoading = false);
+        return;
+      }
+
       UserCredential userCredential =
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
@@ -73,7 +90,7 @@ class _RegisterScreenState extends State<RegisterScreen>
       _showSnackbar("A verification email has been sent. Please verify your email.", Colors.blue);
 
       // Start checking for email verification
-      _checkEmailVerified(userCredential.user!);
+      _checkEmailVerified(userCredential.user!, username);
 
     } on FirebaseAuthException catch (e) {
       String errorMessage = "An error occurred. Please try again.";
@@ -90,17 +107,24 @@ class _RegisterScreenState extends State<RegisterScreen>
     }
   }
 
-  void _checkEmailVerified(User user) async {
-    // Keep checking until the user verifies the email
+  Future<bool> _checkUsernameExists(String username) async {
+    QuerySnapshot result = await FirebaseFirestore.instance
+        .collection('users')
+        .where('username', isEqualTo: username)
+        .get();
+    return result.docs.isNotEmpty;
+  }
+
+  void _checkEmailVerified(User user, String username) async {
     while (true) {
       await Future.delayed(Duration(seconds: 3)); // Check every 3 seconds
       await user.reload();
       if (user.emailVerified) {
         // Save user to Firestore after email verification
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .set({'email': user.email});
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'username': username,
+          'email': user.email,
+        });
 
         _showSnackbar("Email verified! Redirecting to login...", Colors.green);
         await Future.delayed(Duration(seconds: 2));
@@ -149,7 +173,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                           fontWeight: FontWeight.bold,
                           color: Colors.green[800]),
                     ),
-                    SizedBox(height: 30),
+                    SizedBox(height: 20),
+                    _buildTextField(usernameController, "Username", false),
+                    SizedBox(height: 10),
                     _buildTextField(emailController, "Email", false),
                     SizedBox(height: 10),
                     _buildTextField(passwordController, "Password", true),
