@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
 
@@ -39,6 +40,10 @@ class _LoginScreenState extends State<LoginScreen> {
             .collection('users')
             .doc(user.uid)
             .set({'email': user.email}, SetOptions(merge: true));
+
+        // ✅ Save login state in SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
 
         _showSnackbar("Login successful!", Colors.green);
         Navigator.pushReplacement(
@@ -88,6 +93,10 @@ class _LoginScreenState extends State<LoginScreen> {
             .set({'email': user.email, 'name': user.displayName},
             SetOptions(merge: true));
 
+        // ✅ Save login state in SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+
         _showSnackbar("Google Sign-In successful!", Colors.green);
         Navigator.pushReplacement(
             context, MaterialPageRoute(builder: (context) => HomeScreen()));
@@ -99,6 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // ✅ Resend verification email if user hasn't verified their email
   void _showResendVerificationDialog(User user) {
     showDialog(
       context: context,
@@ -124,14 +134,16 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // ✅ Show snackbar messages
   void _showSnackbar(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: color),
     );
   }
 
-  // This is the merged _buildTextField method.
-  Widget _buildTextField(TextEditingController controller, String label, bool isPassword) {
+  // ✅ Build text fields
+  Widget _buildTextField(
+      TextEditingController controller, String label, bool isPassword) {
     return TextField(
       controller: controller,
       obscureText: isPassword && !showPassword,
@@ -140,7 +152,8 @@ class _LoginScreenState extends State<LoginScreen> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         suffixIcon: isPassword
             ? IconButton(
-          icon: Icon(showPassword ? Icons.visibility : Icons.visibility_off),
+          icon: Icon(
+              showPassword ? Icons.visibility : Icons.visibility_off),
           onPressed: () {
             setState(() {
               showPassword = !showPassword;
@@ -206,8 +219,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           SizedBox(height: 10),
-                          Text("OR", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green[700])),
-                          SizedBox(height: 10),
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
@@ -245,12 +256,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => RegisterScreen()),
+                            MaterialPageRoute(
+                                builder: (context) => RegisterScreen()),
                           );
                         },
                         child: Text(
                           "Don't have an account? Register here.",
-                          style: TextStyle(color: Colors.green[700], fontSize: 16),
+                          style: TextStyle(
+                              color: Colors.green[700], fontSize: 16),
                         ),
                       ),
                     ],
