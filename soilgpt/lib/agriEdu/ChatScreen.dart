@@ -34,7 +34,6 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         _selectedImage = File(pickedFile.path);
       });
-      _sendMessage(isImage: true);
     }
   }
 
@@ -51,11 +50,10 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Future<void> _sendMessage({bool isImage = false}) async {
+  Future<void> _sendMessage() async {
     String message = _messageController.text.trim();
     String? imageUrl;
-
-    if (isImage && _selectedImage != null) {
+    if (_selectedImage != null) {
       imageUrl = await _uploadImage(_selectedImage!);
     }
 
@@ -64,7 +62,7 @@ class _ChatScreenState extends State<ChatScreen> {
       await FirebaseFirestore.instance.collection('chats').doc(chatId).collection('messages').add({
         'senderId': currentUserId,
         'receiverId': widget.receiverId,
-        'text': isImage ? null : message,
+        'text': message,
         'imageUrl': imageUrl,
         'timestamp': FieldValue.serverTimestamp(),
       });
@@ -97,7 +95,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   reverse: true,
                   itemCount: snapshot.data!.docs.length,
                   itemBuilder: (context, index) {
-                    var doc = snapshot.data!.docs[index].data() as Map<String, dynamic>;
+                    var doc = snapshot.data!.docs[index];
                     bool isMe = doc['senderId'] == currentUserId;
 
                     return Align(
@@ -117,7 +115,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 borderRadius: BorderRadius.circular(10),
                                 child: Image.network(doc['imageUrl'], height: 150, width: 200, fit: BoxFit.cover),
                               ),
-                            if (doc['text'] != null && doc['text'].toString().isNotEmpty)
+                            if (doc['text'] != null)
                               Padding(
                                 padding: const EdgeInsets.only(top: 5),
                                 child: Text(doc['text'], style: TextStyle(fontSize: 16)),
@@ -161,7 +159,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           IconButton(
             icon: Icon(Icons.send, color: Colors.green),
-            onPressed: () => _sendMessage(),
+            onPressed: _sendMessage,
           ),
         ],
       ),
