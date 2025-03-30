@@ -10,7 +10,8 @@ class VideoFeedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("SoilTube")),
+      appBar: AppBar(title: Text("FarmTube"),  backgroundColor: Colors.green[700],),
+
       body: StreamBuilder<QuerySnapshot>(
         stream: _firebaseService.getVideos(),
         builder: (context, snapshot) {
