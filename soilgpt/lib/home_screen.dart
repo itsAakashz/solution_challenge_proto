@@ -225,7 +225,7 @@ Suggest the best crop(s) along with reasons.
             ),
             _buildDrawerItem(Icons.home, 'Home', () => Navigator.pop(context)),
             _buildDrawerItem(Icons.cast_for_education, 'AgriEdu',
-                    () => Navigator.push(context, MaterialPageRoute(builder: (context) => ShortVideoFeed()))),
+                    () => Navigator.push(context, MaterialPageRoute(builder: (context) => AgriEduScreen()))),
             _buildDrawerItem(Icons.camera_alt, 'Soil Lens',
                     () => Navigator.push(context, MaterialPageRoute(builder: (context) => SoilLensScreen()))),
             _buildDrawerItem(Icons.shopping_cart_rounded, 'Mandi Price',
