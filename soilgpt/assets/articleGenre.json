@@ -1,0 +1,19 @@
+{
+  "genre": [
+    {
+      "id": 1,
+      "title": "Sustainable Farming Practices",
+      "url": "https://example.com/sustainable-farming"
+    },
+    {
+      "id": 2,
+      "title": "Seed Buying Guides",
+      "url": "https://example.com/sustainable-farming"
+    },
+    {
+      "id": 3,
+      "title": "Alternatives to Chemical Fertilizers",
+      "url": "https://example.com/sustainable-farming"
+    }
+  ]
+}
