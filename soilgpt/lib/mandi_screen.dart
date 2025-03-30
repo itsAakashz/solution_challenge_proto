@@ -10,7 +10,7 @@ class MandiScreen extends StatefulWidget {
 class _MandiScreenState extends State<MandiScreen> {
   final String apiKey = "AIzaSyCYjyGPPWcarkZFuIld4Xz6ZIjwitACP9o";
   final String sheetId = "1ZwFVREtFYSU9eiIDDmxkUu9zjdCF9LRZcaFo9ITsOc4";
-  final String range = "Sheet1!A:J"; // Updated range to include all columns
+  final String range = "Sheet1!A:J";
 
   List<Map<String, String>> mandiData = [];
 
@@ -32,15 +32,13 @@ class _MandiScreenState extends State<MandiScreen> {
 
     try {
       final response = await http.get(Uri.parse(url));
-      print("API Response: ${response.body}");
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
 
         if (data.containsKey('values')) {
-          List<List<dynamic>> rows = (data['values'] as List)
-              .map((row) => row is List ? row : [row])
-              .toList();
+          List<List<dynamic>> rows =
+          (data['values'] as List).map((row) => row is List ? row : [row]).toList();
 
           if (rows.length > 1) {
             List<Map<String, String>> tempMandiData = [];
@@ -53,9 +51,9 @@ class _MandiScreenState extends State<MandiScreen> {
                   "market": rows[i][2].toString(),
                   "commodity": rows[i][3].toString(),
                   "variety": rows[i][4].toString(),
-                  "Min_x0020_Price": rows[i][7].toString(), // Index 7 for Min
-                  "Max_x0020_Price": rows[i][8].toString(),  // Index 8 for Max
-                  "Modal_x0020_Price": rows[i][9].toString(),// Index 9 for Modal
+                  "Min_x0020_Price": rows[i][7].toString(),
+                  "Max_x0020_Price": rows[i][8].toString(),
+                  "Modal_x0020_Price": rows[i][9].toString(),
                 });
               }
             }
@@ -108,7 +106,8 @@ class _MandiScreenState extends State<MandiScreen> {
     if (selectedMarket != null) {
       setState(() {
         filteredCommodities = mandiData
-            .where((e) => e["state"] == selectedState &&
+            .where((e) =>
+        e["state"] == selectedState &&
             e["district"] == selectedDistrict &&
             e["market"] == selectedMarket)
             .map((e) => e["commodity"]!)
@@ -122,11 +121,13 @@ class _MandiScreenState extends State<MandiScreen> {
   void fetchData() {
     setState(() => isLoading = true);
 
-    var filteredData = mandiData.where((e) =>
+    var filteredData = mandiData
+        .where((e) =>
     e["state"] == selectedState &&
         e["district"] == selectedDistrict &&
         e["market"] == selectedMarket &&
-        e["commodity"] == selectedCommodity).toList();
+        e["commodity"] == selectedCommodity)
+        .toList();
 
     setState(() {
       mandiData = filteredData;
@@ -143,96 +144,103 @@ class _MandiScreenState extends State<MandiScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: Text("Mandi Prices"),
+        title: Text("Mandi Prices", style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.green[700],
+        elevation: 0,
       ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
           children: [
-            DropdownButtonFormField<String>(
-              value: selectedState,
-              onChanged: (value) {
-                setState(() {
-                  selectedState = value;
-                  filterDistricts();
-                });
-              },
-              items: states
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
-              decoration: InputDecoration(labelText: "State"),
-            ),
-            DropdownButtonFormField<String>(
-              value: selectedDistrict,
-              onChanged: (value) {
-                setState(() {
-                  selectedDistrict = value;
-                  filterMarkets();
-                });
-              },
-              items: filteredDistricts
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
-              decoration: InputDecoration(labelText: "District"),
-            ),
-            DropdownButtonFormField<String>(
-              value: selectedMarket,
-              onChanged: (value) {
-                setState(() {
-                  selectedMarket = value;
-                  filterCommodities();
-                });
-              },
-              items: filteredMarkets
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
-              decoration: InputDecoration(labelText: "Market"),
-            ),
-            DropdownButtonFormField<String>(
-              value: selectedCommodity,
-              onChanged: (value) => setState(() => selectedCommodity = value),
-              items: filteredCommodities
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
-              decoration: InputDecoration(labelText: "Commodity"),
-            ),
+            buildDropdown("State", states, selectedState, (value) {
+              setState(() {
+                selectedState = value;
+                filterDistricts();
+              });
+            }),
+            buildDropdown("District", filteredDistricts, selectedDistrict, (value) {
+              setState(() {
+                selectedDistrict = value;
+                filterMarkets();
+              });
+            }),
+            buildDropdown("Market", filteredMarkets, selectedMarket, (value) {
+              setState(() {
+                selectedMarket = value;
+                filterCommodities();
+              });
+            }),
+            buildDropdown("Commodity", filteredCommodities, selectedCommodity, (value) {
+              setState(() => selectedCommodity = value);
+            }),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: fetchData,
               child: Text("Get Prices", style: TextStyle(color: Colors.white)),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green[700]),
-            ),
-            SizedBox(height: 20),
-            if (isLoading) CircularProgressIndicator(),
-            Expanded(
-              child: mandiData.isEmpty
-                  ? Center(child: Text("No data available"))
-                  : ListView.builder(
-                itemCount: mandiData.length,
-                itemBuilder: (context, index) {
-                  var item = mandiData[index];
-                  return Card(
-                    elevation: 3,
-                    margin: EdgeInsets.symmetric(vertical: 8),
-                    child: ListTile(
-                      title: Text("${item['commodity']} - ${item['variety']}"),
-                      subtitle: Text("Market: ${item['market']}"),
-                      trailing: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text("Min: ₹${item['Min_x0020_Price']}"),
-                          Text("Max: ₹${item['Max_x0020_Price']}"),
-                          Text("Modal: ₹${item['Modal_x0020_Price']}"),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green[700],
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
               ),
             ),
+            SizedBox(height: 20),
+            if (isLoading)
+              CircularProgressIndicator()
+            else
+              Expanded(
+                child: mandiData.isEmpty
+                    ? Center(child: Text("No data available", style: TextStyle(fontSize: 16)))
+                    : ListView.builder(
+                  itemCount: mandiData.length,
+                  itemBuilder: (context, index) {
+                    var item = mandiData[index];
+                    return Card(
+                      margin: EdgeInsets.symmetric(vertical: 8),
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      child: ListTile(
+                        contentPadding: EdgeInsets.all(16),
+                        title: Text(
+                          "${item['commodity']} - ${item['variety']}",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text("Market: ${item['market']}"),
+                        trailing: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text("Min: ₹${item['Min_x0020_Price']}",
+                                style: TextStyle(color: Colors.green[800])),
+                            Text("Max: ₹${item['Max_x0020_Price']}",
+                                style: TextStyle(color: Colors.red[800])),
+                            Text("Modal: ₹${item['Modal_x0020_Price']}",
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildDropdown(
+      String label, List<String> items, String? selectedValue, Function(String?) onChanged) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: DropdownButtonFormField<String>(
+        value: selectedValue,
+        onChanged: onChanged,
+        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
     );

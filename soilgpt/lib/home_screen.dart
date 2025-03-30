@@ -8,6 +8,8 @@ import 'package:http/http.dart' as http;
 import 'location_screen.dart';
 import 'package:SoilGPT/mandi_screen.dart';
 import 'dart:convert';
+import 'package:SoilGPT/farmTube/video_feed_screen.dart';
+import 'package:SoilGPT/agriEdu/agriEdu_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -222,13 +224,18 @@ Suggest the best crop(s) along with reasons.
               ),
             ),
             _buildDrawerItem(Icons.home, 'Home', () => Navigator.pop(context)),
+            _buildDrawerItem(Icons.cast_for_education, 'AgriEdu',
+                    () => Navigator.push(context, MaterialPageRoute(builder: (context) => VideoFeedScreen()))),
             _buildDrawerItem(Icons.camera_alt, 'Soil Lens',
                     () => Navigator.push(context, MaterialPageRoute(builder: (context) => SoilLensScreen()))),
-            _buildDrawerItem(Icons.contact_page, 'Contact',
-                    () => Navigator.push(context, MaterialPageRoute(builder: (context) => ContactScreen()))),
-            _buildDrawerItem(Icons.location_on, 'Set Location', _showLocationDialog),
             _buildDrawerItem(Icons.shopping_cart_rounded, 'Mandi Price',
                     () => Navigator.push(context, MaterialPageRoute(builder: (context) => MandiScreen()))),
+            _buildDrawerItem(Icons.contact_page, 'Contact',
+                    () => Navigator.push(context, MaterialPageRoute(builder: (context) => ContactScreen()))),
+            _buildDrawerItem(Icons.ondemand_video_outlined, 'FarmTube',
+                    () => Navigator.push(context, MaterialPageRoute(builder: (context) => VideoFeedScreen()))),
+            _buildDrawerItem(Icons.location_on, 'Set Location', _showLocationDialog),
+
             Divider(),
             _buildDrawerItem(Icons.logout, 'Logout', logout, color: Colors.red),
           ],
