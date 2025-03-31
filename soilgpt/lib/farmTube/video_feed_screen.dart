@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'upload_video_screen.dart';
 
 void main() {
@@ -48,15 +49,37 @@ class _ShortVideoFeedState extends State<ShortVideoFeed> {
           .orderBy('timestamp', descending: true)
           .get();
 
-      final List<Map<String, dynamic>> videoData = querySnapshot.docs.map((doc) {
-        return {
-          'url': doc['videoUrl'] as String,
-          'title': doc['title'] as String,
-          'description': doc['description'] as String,
-          'username': doc['username'] ?? 'Unknown',
-          'videoId': doc.id // Store the video ID to fetch comments
-        };
-      }).toList();
+      final List<Map<String, dynamic>> videoData = await Future.wait(
+        querySnapshot.docs.map((doc) async {
+          bool isLiked = false;
+          final currentUser = FirebaseAuth.instance.currentUser;
+          if (currentUser != null) {
+            final likeDoc = await FirebaseFirestore.instance
+                .collection('videos')
+                .doc(doc.id)
+                .collection('likes')
+                .doc(currentUser.uid)
+                .get();
+            isLiked = likeDoc.exists;
+          }
+
+          final likesSnapshot = await FirebaseFirestore.instance
+              .collection('videos')
+              .doc(doc.id)
+              .collection('likes')
+              .get();
+
+          return {
+            'url': doc['videoUrl'] as String,
+            'title': doc['title'] as String,
+            'description': doc['description'] as String,
+            'username': doc['username'] ?? 'Unknown',
+            'videoId': doc.id,
+            'isLiked': isLiked,
+            'likeCount': likesSnapshot.size,
+          };
+        }),
+      );
 
       setState(() {
         videos = videoData;
@@ -107,6 +130,14 @@ class _ShortVideoFeedState extends State<ShortVideoFeed> {
             description: videos[index]['description']!,
             username: videos[index]['username']!,
             videoId: videos[index]['videoId']!,
+            isLiked: videos[index]['isLiked'] ?? false,
+            likeCount: videos[index]['likeCount'] ?? 0,
+            onLikeChanged: (bool isLiked, int newCount) {
+              setState(() {
+                videos[index]['isLiked'] = isLiked;
+                videos[index]['likeCount'] = newCount;
+              });
+            },
           );
         },
       ),
@@ -120,6 +151,9 @@ class VideoItem extends StatefulWidget {
   final String description;
   final String username;
   final String videoId;
+  final bool isLiked;
+  final int likeCount;
+  final Function(bool, int) onLikeChanged;
 
   VideoItem({
     required this.videoUrl,
@@ -127,6 +161,9 @@ class VideoItem extends StatefulWidget {
     required this.description,
     required this.username,
     required this.videoId,
+    required this.isLiked,
+    required this.likeCount,
+    required this.onLikeChanged,
   });
 
   @override
@@ -136,10 +173,14 @@ class VideoItem extends StatefulWidget {
 class _VideoItemState extends State<VideoItem> {
   late VideoPlayerController _videoController;
   ChewieController? _chewieController;
+  late bool _isLiked;
+  late int _likeCount;
 
   @override
   void initState() {
     super.initState();
+    _isLiked = widget.isLiked;
+    _likeCount = widget.likeCount;
     _initializeVideo();
   }
 
@@ -170,10 +211,46 @@ class _VideoItemState extends State<VideoItem> {
   void _showComments(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (context) {
         return CommentSection(videoId: widget.videoId);
       },
     );
+  }
+
+  Future<void> _toggleLike() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please login to like videos')),
+      );
+      return;
+    }
+
+    final likeRef = FirebaseFirestore.instance
+        .collection('videos')
+        .doc(widget.videoId)
+        .collection('likes')
+        .doc(currentUser.uid);
+
+    if (_isLiked) {
+      await likeRef.delete();
+      setState(() {
+        _isLiked = false;
+        _likeCount--;
+      });
+    } else {
+      await likeRef.set({
+        'timestamp': FieldValue.serverTimestamp(),
+        'userId': currentUser.uid,
+      });
+      setState(() {
+        _isLiked = true;
+        _likeCount++;
+      });
+    }
+
+    widget.onLikeChanged(_isLiked, _likeCount);
   }
 
   @override
@@ -192,7 +269,7 @@ class _VideoItemState extends State<VideoItem> {
       },
       child: Stack(
         children: [
-          Chewie(controller: _chewieController!), // Video is shown here
+          Chewie(controller: _chewieController!),
 
           Positioned.fill(
             child: Container(
@@ -200,7 +277,7 @@ class _VideoItemState extends State<VideoItem> {
                 gradient: LinearGradient(
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
-                  colors: [Colors.black.withOpacity(0.6), Colors.transparent], // Adjusted color here
+                  colors: [Colors.black.withOpacity(0.6), Colors.transparent],
                 ),
               ),
             ),
@@ -227,11 +304,32 @@ class _VideoItemState extends State<VideoItem> {
             right: 20,
             child: Column(
               children: [
-                IconButton(icon: Icon(Icons.favorite_border, color: Colors.white, size: 28), onPressed: () {}),
+                Column(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        _isLiked ? Icons.favorite : Icons.favorite_border,
+                        color: _isLiked ? Colors.red : Colors.white,
+                        size: 28,
+                      ),
+                      onPressed: _toggleLike,
+                    ),
+                    Text(
+                      _likeCount.toString(),
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
                 SizedBox(height: 12),
-                IconButton(icon: Icon(Icons.share, color: Colors.white, size: 28), onPressed: _shareVideo),
+                IconButton(
+                  icon: Icon(Icons.share, color: Colors.white, size: 28),
+                  onPressed: _shareVideo,
+                ),
                 SizedBox(height: 12),
-                IconButton(icon: Icon(Icons.comment, color: Colors.white, size: 28), onPressed: () => _showComments(context)),
+                IconButton(
+                  icon: Icon(Icons.comment, color: Colors.white, size: 28),
+                  onPressed: () => _showComments(context),
+                ),
               ],
             ),
           ),
@@ -252,7 +350,11 @@ class CommentSection extends StatefulWidget {
 
 class _CommentSectionState extends State<CommentSection> {
   final TextEditingController _commentController = TextEditingController();
+  final TextEditingController _replyController = TextEditingController();
   late CollectionReference _commentsRef;
+  String? _replyingToCommentId;
+  String? _replyingToUsername;
+  Map<String, bool> _showReplies = {};
 
   @override
   void initState() {
@@ -265,30 +367,52 @@ class _CommentSectionState extends State<CommentSection> {
       _commentsRef.add({
         'comment': _commentController.text,
         'timestamp': FieldValue.serverTimestamp(),
-        'replies': [] // Initialize replies as an empty list if they don't exist
+        'username': FirebaseAuth.instance.currentUser?.displayName ?? 'Anonymous',
+        'userId': FirebaseAuth.instance.currentUser?.uid,
+        'replies': []
       });
       _commentController.clear();
     }
   }
 
   void _addReply(String commentId) {
-    if (_commentController.text.isNotEmpty) {
+    if (_replyController.text.isNotEmpty) {
       _commentsRef.doc(commentId).update({
-        'replies': FieldValue.arrayUnion([ // Use arrayUnion to safely add replies
-          {'reply': _commentController.text, 'timestamp': FieldValue.serverTimestamp()}
+        'replies': FieldValue.arrayUnion([
+          {
+            'reply': _replyController.text,
+            'timestamp': FieldValue.serverTimestamp(),
+            'username': FirebaseAuth.instance.currentUser?.displayName ?? 'Anonymous',
+            'userId': FirebaseAuth.instance.currentUser?.uid,
+          }
         ])
       });
-      _commentController.clear();
+      _replyController.clear();
+      setState(() {
+        _replyingToCommentId = null;
+        _replyingToUsername = null;
+      });
     }
+  }
+
+  void _toggleRepliesVisibility(String commentId) {
+    setState(() {
+      _showReplies[commentId] = !(_showReplies[commentId] ?? false);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(16),
-      height: 400,
+      height: MediaQuery.of(context).size.height * 0.8,
       child: Column(
         children: [
+          Text(
+            'Comments',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 10),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: _commentsRef.orderBy('timestamp', descending: true).snapshots(),
@@ -305,26 +429,72 @@ class _CommentSectionState extends State<CommentSection> {
                   itemCount: snapshot.data!.docs.length,
                   itemBuilder: (context, index) {
                     var comment = snapshot.data!.docs[index];
+                    bool showReplies = _showReplies[comment.id] ?? false;
+                    bool hasReplies = comment['replies'] != null && comment['replies'].isNotEmpty;
+
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         ListTile(
-                          title: Text(comment['comment']),
-                          subtitle: Text(comment['timestamp']?.toDate()?.toString() ?? 'Just now'),
-                          trailing: IconButton(
-                            icon: Icon(Icons.reply),
-                            onPressed: () => _showReplyDialog(context, comment.id),
+                          title: Text(comment['username'] ?? 'Anonymous',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text(comment['comment']),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.reply),
+                                onPressed: () {
+                                  setState(() {
+                                    _replyingToCommentId = comment.id;
+                                    _replyingToUsername = comment['username'];
+                                  });
+                                },
+                              ),
+                              if (hasReplies)
+                                IconButton(
+                                  icon: Icon(showReplies ? Icons.expand_less : Icons.expand_more),
+                                  onPressed: () => _toggleRepliesVisibility(comment.id),
+                                ),
+                            ],
                           ),
                         ),
-                        if (comment['replies'] != null)
+
+                        // Show reply input if this is the comment being replied to
+                        if (_replyingToCommentId == comment.id)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _replyController,
+                                    decoration: InputDecoration(
+                                      hintText: 'Replying to ${_replyingToUsername}...',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.send),
+                                  onPressed: () => _addReply(comment.id),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                        // Show replies if expanded
+                        if (showReplies && hasReplies)
                           Padding(
                             padding: const EdgeInsets.only(left: 16.0),
                             child: Column(
                               children: List.generate(comment['replies'].length, (replyIndex) {
                                 var reply = comment['replies'][replyIndex];
                                 return ListTile(
-                                  title: Text(reply['reply']),
-                                  subtitle: Text(reply['timestamp']?.toDate()?.toString() ?? 'Just now'),
+                                  leading: Icon(Icons.subdirectory_arrow_right, size: 20),
+                                  title: Text(reply['username'] ?? 'Anonymous',
+                                      style: TextStyle(fontWeight: FontWeight.bold)),
+                                  subtitle: Text(reply['reply']),
                                 );
                               }),
                             ),
@@ -336,6 +506,8 @@ class _CommentSectionState extends State<CommentSection> {
               },
             ),
           ),
+
+          // Main comment input
           Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Row(
@@ -343,39 +515,21 @@ class _CommentSectionState extends State<CommentSection> {
                 Expanded(
                   child: TextField(
                     controller: _commentController,
-                    decoration: InputDecoration(hintText: 'Add a comment...'),
+                    decoration: InputDecoration(
+                      hintText: 'Add a comment...',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                 ),
-                IconButton(icon: Icon(Icons.send), onPressed: _addComment),
+                IconButton(
+                  icon: Icon(Icons.send),
+                  onPressed: _addComment,
+                ),
               ],
             ),
           ),
         ],
       ),
-    );
-  }
-
-  void _showReplyDialog(BuildContext context, String commentId) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Reply to Comment'),
-          content: TextField(
-            controller: _commentController,
-            decoration: InputDecoration(hintText: 'Enter your reply...'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                _addReply(commentId);
-                Navigator.pop(context);
-              },
-              child: Text('Reply'),
-            ),
-          ],
-        );
-      },
     );
   }
 }
