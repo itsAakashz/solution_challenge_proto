@@ -14,6 +14,8 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
   File? _video;
   TextEditingController _titleController = TextEditingController();
   TextEditingController _descriptionController = TextEditingController();
+  TextEditingController _tagController = TextEditingController();
+  List<String> _tags = [];
   bool _isUploading = false;
   double _uploadProgress = 0;
 
@@ -21,7 +23,6 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Picks a video from the gallery
   Future<void> _pickVideo() async {
     final pickedFile = await ImagePicker().pickVideo(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -31,7 +32,22 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
     }
   }
 
-  /// Uploads video to Firebase Storage and stores metadata in Firestore
+  void _addTag() {
+    String tag = _tagController.text.trim();
+    if (tag.isNotEmpty && !_tags.contains(tag)) {
+      setState(() {
+        _tags.add(tag);
+        _tagController.clear();
+      });
+    }
+  }
+
+  void _removeTag(String tag) {
+    setState(() {
+      _tags.remove(tag);
+    });
+  }
+
   Future<void> _uploadVideo() async {
     if (_video == null || _titleController.text.isEmpty || _descriptionController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -69,12 +85,12 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
       TaskSnapshot taskSnapshot = await uploadTask;
       String videoUrl = await taskSnapshot.ref.getDownloadURL();
 
-      // Store video details in Firestore
       await _firestore.collection("videos").add({
         "title": _titleController.text,
         "description": _descriptionController.text,
         "videoUrl": videoUrl,
         "username": user.displayName ?? "Anonymous",
+        "tags": _tags,
         "timestamp": FieldValue.serverTimestamp(),
       });
 
@@ -88,8 +104,8 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
         _uploadProgress = 0;
         _titleController.clear();
         _descriptionController.clear();
+        _tags.clear();
       });
-
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("⚠️ Failed to upload video: $error")),
@@ -103,49 +119,102 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Upload Video")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: Colors.green.shade100,
+      appBar: AppBar(
+        title: Text("Upload Video", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+        backgroundColor: Colors.green.shade700,
+        centerTitle: true,
+      ),
+      resizeToAvoidBottomInset: true, // ✅ Prevents overflow
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 6,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _video == null
+                        ? Text("No video selected", style: TextStyle(fontSize: 16, color: Colors.black54))
+                        : Text("Video selected: ${_video!.path.split('/').last}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 10),
+                    ElevatedButton.icon(
+                      onPressed: _pickVideo,
+                      icon: Icon(Icons.video_library),
+                      label: Text("Pick Video"),
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade600),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20),
+              _buildTextField("Video Title", _titleController),
+              SizedBox(height: 15),
+              _buildTextField("Video Description", _descriptionController),
+              SizedBox(height: 15),
+              _buildTagsInput(),
+              SizedBox(height: 25),
+              _isUploading
+                  ? LinearProgressIndicator(value: _uploadProgress)
+                  : ElevatedButton(
+                onPressed: _uploadVideo,
+                child: Text("Upload Video"),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade600, minimumSize: Size(double.infinity, 50)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  Widget _buildTagsInput() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            _video == null
-                ? Text("No video selected", style: TextStyle(fontSize: 16))
-                : Text("Video selected: ${_video!.path.split('/').last}", style: TextStyle(fontSize: 16)),
-
-            SizedBox(height: 10),
+            Expanded(
+              child: _buildTextField("Enter Tags", _tagController),
+            ),
+            SizedBox(width: 10),
             ElevatedButton(
-              onPressed: _pickVideo,
-              child: Text("Pick Video"),
-            ),
-
-            TextField(
-              controller: _titleController,
-              decoration: InputDecoration(labelText: "Video Title"),
-            ),
-
-            TextField(
-              controller: _descriptionController,
-              decoration: InputDecoration(labelText: "Video Description"),
-            ),
-
-            SizedBox(height: 20),
-
-            _isUploading
-                ? Column(
-              children: [
-                LinearProgressIndicator(value: _uploadProgress),
-                SizedBox(height: 10),
-                Text("${(_uploadProgress * 100).toStringAsFixed(2)}% uploaded"),
-              ],
-            )
-                : ElevatedButton(
-              onPressed: _uploadVideo,
-              child: Text("Upload Video"),
+              onPressed: _addTag,
+              child: Text("Add"),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade600),
             ),
           ],
         ),
-      ),
+        Wrap(
+          spacing: 8.0,
+          children: _tags.map((tag) => Chip(label: Text(tag), onDeleted: () => _removeTag(tag))).toList(),
+        ),
+      ],
     );
   }
 }
