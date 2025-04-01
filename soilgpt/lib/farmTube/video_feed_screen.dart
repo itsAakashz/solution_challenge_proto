@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Short Video Feed',
+      title: 'FarmTube',
       theme: ThemeData.dark(),
       home: ShortVideoFeed(),
     );
@@ -70,7 +70,8 @@ class _ShortVideoFeedState extends State<ShortVideoFeed> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Short Video Feed'),
+        title: Text('FarmTube', style: TextStyle(color: Colors.black),),
+        backgroundColor: Colors.green[500],
         actions: [
           IconButton(
             icon: Icon(Icons.add),
