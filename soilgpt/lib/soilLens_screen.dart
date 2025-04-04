@@ -415,20 +415,38 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
 
     return _analysisResult['nutrients'].entries.map<Widget>((entry) {
       return Padding(
-        padding: EdgeInsets.symmetric(vertical: 2),
-        child: Row(
+        padding: EdgeInsets.symmetric(vertical: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(width: 20, child: Text('•')),
-            SizedBox(width: 120, child: Text(entry.key)),
-            Expanded(
+            Row(
+              children: [
+                SizedBox(width: 20, child: Text('•')),
+                SizedBox(
+                  width: 100,  // Reduced from 120 to give more space
+                  child: Text(
+                    entry.key,
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ),
+                SizedBox(width: 8),
+                Flexible(  // Changed from Expanded to Flexible to prevent overflow
+                  child: Text(
+                    entry.value,
+                    overflow: TextOverflow.ellipsis,  // Add ellipsis if text is too long
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 4),
+            Padding(
+              padding: EdgeInsets.only(left: 28),  // Adjusted left padding
               child: LinearProgressIndicator(
                 value: _parseNutrientValue(entry.value) / _getNutrientMax(entry.key),
                 backgroundColor: Colors.grey[200],
                 color: _getNutrientColor(entry.key, entry.value),
               ),
             ),
-            SizedBox(width: 10),
-            Text(entry.value),
           ],
         ),
       );
