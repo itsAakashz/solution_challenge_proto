@@ -160,7 +160,78 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
       'moisture_preference': 'Medium',
       'description': 'Best grown in well-drained loamy soils with good water retention'
     },
-    // ... (rest of your crop database entries)
+    {
+      'name': 'Rice',
+      'suitable_soil': ['Clay', 'Clay Loam', 'Silty Clay'],
+      'ph_range': [5.0, 6.5],
+      'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+      'moisture_preference': 'High',
+      'description': 'Requires heavy soils with good water retention capacity'
+    },
+    {
+      'name': 'Corn (Maize)',
+      'suitable_soil': ['Loam', 'Sandy Loam', 'Silty Loam'],
+      'ph_range': [5.8, 7.0],
+      'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+      'moisture_preference': 'Medium',
+      'description': 'Prefers well-drained, fertile soils with good organic matter'
+    },
+    {
+      'name': 'Potatoes',
+      'suitable_soil': ['Sandy Loam', 'Loam', 'Silt'],
+      'ph_range': [4.8, 6.5],
+      'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+      'moisture_preference': 'Medium',
+      'description': 'Grows best in loose, well-drained soils with good aeration'
+    },
+    {
+      'name': 'Tomatoes',
+      'suitable_soil': ['Loam', 'Sandy Loam'],
+      'ph_range': [6.0, 6.8],
+      'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+      'moisture_preference': 'Medium',
+      'description': 'Thrives in well-drained soils rich in organic matter'
+    },
+    {
+      'name': 'Barley',
+      'suitable_soil': ['Loam', 'Clay Loam', 'Silty Loam'],
+      'ph_range': [6.0, 7.5],
+      'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+      'moisture_preference': 'Medium',
+      'description': 'Adaptable to various soils but prefers well-drained loams'
+    },
+    {
+      'name': 'Soybeans',
+      'suitable_soil': ['Loam', 'Sandy Loam', 'Clay Loam'],
+      'ph_range': [6.0, 7.0],
+      'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+      'moisture_preference': 'Medium',
+      'description': 'Grows well in most soil types except very sandy or heavy clay'
+    },
+    {
+      'name': 'Cotton',
+      'suitable_soil': ['Sandy Loam', 'Loam', 'Clay Loam'],
+      'ph_range': [5.5, 7.0],
+      'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+      'moisture_preference': 'Medium',
+      'description': 'Prefers deep, well-drained soils with good water holding capacity'
+    },
+    {
+      'name': 'Carrots',
+      'suitable_soil': ['Sandy Loam', 'Loam'],
+      'ph_range': [5.5, 7.0],
+      'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+      'moisture_preference': 'Medium',
+      'description': 'Requires loose, stone-free soil for proper root development'
+    },
+    {
+      'name': 'Cabbage',
+      'suitable_soil': ['Loam', 'Clay Loam', 'Silty Loam'],
+      'ph_range': [6.0, 7.5],
+      'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'High', 'Potassium': 'High'},
+      'moisture_preference': 'High',
+      'description': 'Grows best in fertile, moisture-retentive soils'
+    },
   ];
 
   Future<void> _pickImage(ImageSource source) async {
@@ -285,7 +356,7 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
               'Add organic compost to improve soil structure',
               'Test soil pH and adjust if necessary'
             ]),
-            'suitable_crops': _findSuitableCrops(
+            'best_crop': _findBestCropMatch(
               soilData['soil_type']?.toString() ?? 'Loam',
               double.tryParse(soilData['ph_level']?.toString() ?? '6.5') ?? 6.5,
               double.tryParse(soilData['moisture_content']?.toString() ?? '15.0') ?? 15.0,
@@ -333,7 +404,7 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
       'Sulfur': '${5 + random.nextInt(40)} ppm',
     };
 
-    final suitableCrops = _findSuitableCrops(soilType, phLevel, double.parse(moistureContent));
+    final bestCrop = _findBestCropMatch(soilType, phLevel, double.parse(moistureContent));
     final recommendations = _generateRealisticRecommendations(
         soilType,
         phLevel,
@@ -348,7 +419,7 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
       'moisture_content': '$moistureContent%',
       'nutrients': nutrients,
       'recommendations': recommendations,
-      'suitable_crops': suitableCrops,
+      'best_crop': bestCrop,
       'confidence_score': '${(75 + random.nextInt(20)).toString()}%',
       'image_quality': _assessImageQuality(fileName),
       'timestamp': _captureTime?.toLocal().toString() ?? DateTime.now().toLocal().toString(),
@@ -373,26 +444,82 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
     }
   }
 
-  List<Map<String, dynamic>> _findSuitableCrops(String soilType, double phLevel, double moisture) {
-    return _cropDatabase.where((crop) {
+  Map<String, dynamic>? _findBestCropMatch(String soilType, double phLevel, double moisture) {
+    // Score each crop based on how well it matches the soil conditions
+    List<Map<String, dynamic>> scoredCrops = _cropDatabase.map((crop) {
+      double score = 0;
+
+      // Soil type match (40% weight) - more precise matching
       final suitableSoils = (crop['suitable_soil'] as List).cast<String>();
-      final soilMatch = suitableSoils.any((s) =>
-      s.toLowerCase().contains(soilType.toLowerCase()) ||
-          soilType.toLowerCase().contains(s.toLowerCase()));
+      if (suitableSoils.any((s) => s.toLowerCase() == soilType.toLowerCase())) {
+        score += 40; // Exact match
+      } else if (suitableSoils.any((s) => s.toLowerCase().contains(soilType.toLowerCase()))) {
+        score += 35; // Partial match (soil type is part of suitable soil)
+      } else if (suitableSoils.any((s) => soilType.toLowerCase().contains(s.toLowerCase()))) {
+        score += 30; // Partial match (suitable soil is part of soil type)
+      } else {
+        score += 5; // No match
+      }
 
+      // pH match (30% weight) - stricter matching
       final phRange = (crop['ph_range'] as List).cast<double>();
-      final phMatch = phLevel >= (phRange[0] - 0.5) && phLevel <= (phRange[1] + 0.5);
+      final phMin = phRange[0];
+      final phMax = phRange[1];
 
+      if (phLevel >= phMin && phLevel <= phMax) {
+        score += 30; // Perfect pH match
+      } else if (phLevel >= (phMin - 0.3) && phLevel <= (phMax + 0.3)) {
+        score += 20; // Close to optimal pH
+      } else if (phLevel >= (phMin - 0.7) && phLevel <= (phMax + 0.7)) {
+        score += 10; // Within tolerable range
+      } else {
+        score += 0; // Outside tolerable range
+      }
+
+      // Moisture match (30% weight) - more nuanced scoring
       final moisturePref = crop['moisture_preference'] as String;
-      final moistureMatch =
-          (moisturePref == 'High' && moisture > 25) ||
-              (moisturePref == 'Medium' && moisture >= 10 && moisture <= 35) ||
-              (moisturePref == 'Low' && moisture < 20);
+      if (moisturePref == 'High' && moisture > 30) {
+        score += 30; // Perfect for high moisture crops
+      } else if (moisturePref == 'High' && moisture > 20) {
+        score += 25; // Tolerable for high moisture crops
+      } else if (moisturePref == 'Medium' && moisture >= 15 && moisture <= 30) {
+        score += 30; // Ideal for medium moisture crops
+      } else if (moisturePref == 'Medium' && moisture >= 10 && moisture <= 35) {
+        score += 25; // Tolerable for medium moisture crops
+      } else if (moisturePref == 'Low' && moisture < 20) {
+        score += 30; // Ideal for low moisture crops
+      } else if (moisturePref == 'Low' && moisture < 25) {
+        score += 25; // Tolerable for low moisture crops
+      } else {
+        score += 5; // Poor match
+      }
 
-      return soilMatch && phMatch && moistureMatch;
+      // Additional scoring based on nutrient requirements (bonus points)
+      final nutrientReqs = crop['nutrient_requirements'] as Map<String, String>;
+      if (nutrientReqs['Nitrogen'] == 'High') {
+        score += 5; // Bonus for nitrogen-loving crops
+      }
+      if (nutrientReqs['Phosphorus'] == 'High') {
+        score += 3; // Bonus for phosphorus-loving crops
+      }
+
+      return {...crop, 'match_score': score};
     }).toList();
-  }
 
+    // Sort by score descending
+    scoredCrops.sort((a, b) => b['match_score'].compareTo(a['match_score']));
+
+    // Debug print to see all crops and their scores
+    print('Crop matching results:');
+    scoredCrops.forEach((crop) {
+      print('${crop['name']}: ${crop['match_score']}');
+    });
+
+    // Return the best match if score is above threshold (75/100)
+    return scoredCrops.isNotEmpty && scoredCrops.first['match_score'] >= 75
+        ? scoredCrops.first
+        : null;
+  }
   List<String> _generateRealisticRecommendations(
       String soilType,
       double phLevel,
@@ -541,24 +668,24 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
               children: [
                 SizedBox(width: 20, child: Text('•')),
                 SizedBox(
-                  width: 100,  // Reduced from 120 to give more space
+                  width: 100,
                   child: Text(
                     entry.key,
                     style: TextStyle(fontWeight: FontWeight.w500),
                   ),
                 ),
                 SizedBox(width: 8),
-                Flexible(  // Changed from Expanded to Flexible to prevent overflow
+                Flexible(
                   child: Text(
                     entry.value,
-                    overflow: TextOverflow.ellipsis,  // Add ellipsis if text is too long
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
             SizedBox(height: 4),
             Padding(
-              padding: EdgeInsets.only(left: 28),  // Adjusted left padding
+              padding: EdgeInsets.only(left: 28),
               child: LinearProgressIndicator(
                 value: _parseNutrientValue(entry.value) / _getNutrientMax(entry.key),
                 backgroundColor: Colors.grey[200],
@@ -624,12 +751,12 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
     );
   }
 
-  Widget _buildSuitableCrops() {
-    final crops = _analysisResult['suitable_crops'] as List?;
+  Widget _buildBestCrop() {
+    final bestCrop = _analysisResult['best_crop'] as Map<String, dynamic>?;
     final soilType = _analysisResult['soil_type'] as String?;
     final phLevel = double.tryParse(_analysisResult['ph_level'] ?? '') ?? 0;
 
-    if (crops == null || crops.isEmpty) {
+    if (bestCrop == null) {
       final amendments = _getSoilAmendments(soilType, phLevel);
 
       return Card(
@@ -650,7 +777,7 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
               ),
               SizedBox(height: 8),
               Text(
-                'No crops perfectly match your current soil conditions (${soilType ?? 'Unknown soil'}, pH ${phLevel.toStringAsFixed(1)}).',
+                'No ideal crop matches found for your current soil conditions (${soilType ?? 'Unknown soil'}, pH ${phLevel.toStringAsFixed(1)}).',
                 style: TextStyle(color: Colors.grey[700]),
               ),
               SizedBox(height: 10),
@@ -669,63 +796,65 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
                   ],
                 ),
               )).toList(),
-              SizedBox(height: 8),
-              Text(
-                'After amendments, these crops may become suitable:',
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-              SizedBox(height: 8),
-              ..._getPotentiallySuitableCrops(soilType, phLevel).take(3).map((crop) => Padding(
-                padding: EdgeInsets.symmetric(vertical: 4),
-                child: Text('• ${crop['name']} (needs pH ${crop['ph_range'][0]}-${crop['ph_range'][1]}'),
-              )).toList(),
             ],
           ),
         ),
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(height: 15),
-        Text(
-          'Recommended Crops (${crops.length}):',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        SizedBox(height: 8),
-        ...crops.map<Widget>((crop) {
-          return Card(
-            margin: EdgeInsets.symmetric(vertical: 6),
-            child: Padding(
-              padding: EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '🌱 ${crop['name']}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                      color: Colors.green[800],
-                    ),
-                  ),
-                  SizedBox(height: 6),
-                  Text(
-                    crop['description'] ?? '',
-                    style: TextStyle(fontStyle: FontStyle.italic),
-                  ),
-                  SizedBox(height: 8),
-                  _buildCropDetailRow('Soil Types', (crop['suitable_soil'] as List).join(', ')),
-                  _buildCropDetailRow('pH Range', '${crop['ph_range'][0]}-${crop['ph_range'][1]}'),
-                  _buildCropDetailRow('Moisture', crop['moisture_preference'] ?? 'Medium'),
-                  _buildCropDetailRow('Key Nutrients', _formatNutrientRequirements(crop['nutrient_requirements'])),
-                ],
+    return Card(
+      margin: EdgeInsets.only(top: 10),
+      color: Colors.green[50],
+      child: Padding(
+        padding: EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Text(
+                'Best Crop Match',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Colors.green[900],
+                ),
               ),
             ),
-          );
-        }).toList(),
-      ],
+            SizedBox(height: 12),
+            Center(
+              child: Text(
+                '🌱 ${bestCrop['name']}',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 22,
+                  color: Colors.green[800],
+                ),
+              ),
+            ),
+            SizedBox(height: 8),
+            Divider(),
+            SizedBox(height: 8),
+            Text(
+              bestCrop['description'] ?? '',
+              style: TextStyle(fontStyle: FontStyle.italic),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 12),
+            _buildCropDetailRow('Soil Types', (bestCrop['suitable_soil'] as List).join(', ')),
+            _buildCropDetailRow('Optimal pH', '${bestCrop['ph_range'][0]}-${bestCrop['ph_range'][1]}'),
+            _buildCropDetailRow('Moisture', bestCrop['moisture_preference'] ?? 'Medium'),
+            _buildCropDetailRow('Key Nutrients', _formatNutrientRequirements(bestCrop['nutrient_requirements'])),
+            SizedBox(height: 12),
+            Text(
+              'Match Score: ${bestCrop['match_score']?.toStringAsFixed(0) ?? 'N/A'}%',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: bestCrop['match_score'] >= 85 ? Colors.green : Colors.orange,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -803,15 +932,6 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
     }
 
     return amendments.take(3).toList();
-  }
-
-  List<Map<String, dynamic>> _getPotentiallySuitableCrops(String? soilType, double phLevel) {
-    if (soilType == null) return _cropDatabase;
-
-    return _cropDatabase.where((crop) {
-      final phRange = (crop['ph_range'] as List).cast<double>();
-      return phLevel >= (phRange[0] - 1.0) && phLevel <= (phRange[1] + 1.0);
-    }).toList();
   }
 
   Widget _buildCaptureTips() {
@@ -994,7 +1114,7 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
               if (_analysisResult.isNotEmpty) ...[
                 SizedBox(height: 20),
                 _buildAnalysisCard(),
-                _buildSuitableCrops(),
+                _buildBestCrop(),
               ],
             ],
           ),
