@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert'; // For JSON parsing
+import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firebase Firestore
 
 class LocationScreen extends StatefulWidget {
   @override
@@ -13,30 +14,36 @@ class _LocationScreenState extends State<LocationScreen> {
   bool isLoading = false;
   String result = "";
 
-  // Function to get recommendations from Gemini AI (assuming it's integrated)
+  // Function to get recommendations from Gemini AI
   Future<void> getRecommendations(String location) async {
     setState(() {
       isLoading = true;
     });
 
-    // Call Google Gemini API to get soil conditions and crop recommendation
     try {
-      // Replace with the actual URL and API key for Gemini
+      // Replace with actual Gemini AI API URL
       final response = await http.post(
-        Uri.parse('https://gemini-api-url.com/get_recommendations'), // Replace with actual API URL
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: json.encode({
-          'location': location,
-        }),
+        Uri.parse('https://gemini-api-url.com/get_recommendations'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'location': location}),
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        String soilCondition = data['soilCondition'];
+        String suitableCrop = data['suitableCrop'];
+
         setState(() {
           isLoading = false;
-          result = "Soil Condition: ${data['soilCondition']}\nSuitable Crop: ${data['suitableCrop']}";
+          result = "Soil Condition: $soilCondition\nSuitable Crop: $suitableCrop";
+        });
+
+        // Save to Firebase Firestore
+        await FirebaseFirestore.instance.collection('recommendations').add({
+          'location': location,
+          'soilCondition': soilCondition,
+          'suitableCrop': suitableCrop,
+          'timestamp': FieldValue.serverTimestamp(),
         });
       } else {
         setState(() {

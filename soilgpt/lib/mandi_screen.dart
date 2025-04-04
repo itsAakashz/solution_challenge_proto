@@ -1,6 +1,172 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+
+class AgricultureLoadingAnimation extends StatefulWidget {
+  final double size;
+
+  const AgricultureLoadingAnimation({Key? key, this.size = 100.0}) : super(key: key);
+
+  @override
+  _AgricultureLoadingAnimationState createState() => _AgricultureLoadingAnimationState();
+}
+
+class _AgricultureLoadingAnimationState extends State<AgricultureLoadingAnimation>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _rotationAnimation;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _rotationAnimation = Tween<double>(begin: 0, end: 2 * pi).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.9, end: 1.1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: _scaleAnimation.value,
+                child: CustomPaint(
+                  size: Size(widget.size, widget.size),
+                  painter: _AgriculturePainter(rotationValue: _rotationAnimation.value),
+                ),
+              );
+            },
+          ),
+          SizedBox(height: 20),
+          Text(
+            "Loading Market Data...",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.green[800],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AgriculturePainter extends CustomPainter {
+  final double rotationValue;
+
+  _AgriculturePainter({required this.rotationValue});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 * 0.8;
+
+    // Draw sun
+    final sunPaint = Paint()
+      ..color = Colors.amber
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, radius * 0.25, sunPaint);
+
+    // Draw sun rays - animated rotation
+    final rayPaint = Paint()
+      ..color = Colors.amber.withOpacity(0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round;
+
+    for (int i = 0; i < 12; i++) {
+      final angle = i * 30 * pi / 180 + rotationValue;
+      final start = Offset(
+        center.dx + (radius * 0.25) * cos(angle),
+        center.dy + (radius * 0.25) * sin(angle),
+      );
+      final end = Offset(
+        center.dx + (radius * 0.5) * cos(angle),
+        center.dy + (radius * 0.5) * sin(angle),
+      );
+      canvas.drawLine(start, end, rayPaint);
+    }
+
+    // Draw wheat stalks
+    final stalkPaint = Paint()
+      ..color = Colors.green[700]!
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0;
+
+    final wheatPaint = Paint()
+      ..color = Colors.amber[800]!
+      ..style = PaintingStyle.fill;
+
+    // Draw ground
+    final groundPaint = Paint()
+      ..color = Colors.brown[400]!
+      ..style = PaintingStyle.fill;
+
+
+
+        // Draw wheat plants
+        for (int i = 0; i < 8; i++) {
+      final position = i * (size.width / 7);
+      final height = radius * 0.4 + (i % 3) * 10;
+
+      // Draw stalk
+      final stalkPath = Path()
+        ..moveTo(position, center.dy + radius * 0.6)
+        ..quadraticBezierTo(
+          position + 10,
+          center.dy + radius * 0.6 - height * 0.7,
+          position,
+          center.dy + radius * 0.6 - height,
+        );
+      canvas.drawPath(stalkPath, stalkPaint);
+
+      // Draw wheat head
+      final headCenter = Offset(position, center.dy + radius * 0.6 - height);
+      canvas.drawCircle(headCenter, 8, wheatPaint);
+
+      // Draw wheat grains
+      for (double j = 0; j < 2 * pi; j += pi / 4) {
+        final grainPos = Offset(
+          headCenter.dx + 6 * cos(j + rotationValue * 0.5),
+          headCenter.dy + 6 * sin(j + rotationValue * 0.5),
+        );
+        canvas.drawCircle(grainPos, 2, wheatPaint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
 
 class MandiScreen extends StatefulWidget {
   @override
@@ -145,9 +311,12 @@ class _MandiScreenState extends State<MandiScreen> {
         e["commodity"] == selectedCommodity)
         .toList();
 
-    setState(() {
-      filteredMandiData = tempFilteredData;
-      isLoading = false;
+    Future.delayed(Duration(seconds: 1), () {
+      // Simulate network delay for demo purposes
+      setState(() {
+        filteredMandiData = tempFilteredData;
+        isLoading = false;
+      });
     });
   }
 
@@ -164,7 +333,7 @@ class _MandiScreenState extends State<MandiScreen> {
         elevation: 0,
       ),
       body: isLoading && mandiData.isEmpty
-          ? Center(child: CircularProgressIndicator())
+          ? AgricultureLoadingAnimation(size: 150)
           : Padding(
         padding: EdgeInsets.all(screenWidth * 0.04),
         child: Column(
@@ -269,7 +438,7 @@ class _MandiScreenState extends State<MandiScreen> {
               Text("Results", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               if (isLoading)
-                Expanded(child: Center(child: CircularProgressIndicator()))
+                Expanded(child: AgricultureLoadingAnimation(size: 120))
               else if (filteredMandiData.isEmpty)
                 Expanded(
                   child: Center(
