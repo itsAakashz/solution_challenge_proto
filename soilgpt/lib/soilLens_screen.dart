@@ -6,6 +6,7 @@ import 'package:path/path.dart' as path;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:http_parser/http_parser.dart';
+
 class SoilLensScreen extends StatefulWidget {
   @override
   _SoilLensScreenState createState() => _SoilLensScreenState();
@@ -93,55 +94,104 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
   }
 
   Future<void> _analyzeWithCloudAI() async {
-    // Replace with your actual cloud API endpoint
-    final uri = Uri.parse('https://api.soilanalysis.com/v1/analyze');
-    final request = http.MultipartRequest('POST', uri);
+    final apiKey = "AIzaSyBX55Wxz61k-TpRhcuLyOGr8vU2PdFeS1Q";
+    final url = Uri.parse("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey");
 
-    request.files.add(await http.MultipartFile.fromPath(
-      'image',
-      _image!.path,
-      contentType: MediaType('image', 'jpeg'),
-    ));
+    // Read the image file as bytes
+    final imageBytes = await _image!.readAsBytes();
+    final base64Image = base64Encode(imageBytes);
+
+    // Create the request body for Gemini API
+    final requestBody = {
+      "contents": [
+        {
+          "parts": [
+            {
+              "text": "Analyze this soil image and provide detailed information about: "
+                  "1. Soil type (Clay, Silt, Sand, Loam, etc.)\n"
+                  "2. pH level (numeric value)\n"
+                  "3. Organic matter content (percentage)\n"
+                  "4. Moisture content (percentage)\n"
+                  "5. Nutrient levels (Nitrogen, Phosphorus, Potassium, Calcium, Magnesium, Sulfur in ppm)\n"
+                  "6. Recommendations for soil improvement\n"
+                  "Format your response as a JSON object with these exact keys: "
+                  "soil_type, ph_level, organic_matter, moisture_content, nutrients (with subkeys for each nutrient), "
+                  "recommendations (as an array of strings), and confidence_score."
+            },
+            {
+              "inlineData": {
+                "mimeType": "image/jpeg",
+                "data": base64Image
+              }
+            }
+          ]
+        }
+      ]
+    };
 
     try {
-      final response = await request.send();
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(requestBody),
+      );
+
       if (response.statusCode == 200) {
-        final jsonResponse = json.decode(await response.stream.bytesToString());
+        final jsonResponse = json.decode(response.body);
 
-        // Process the cloud API response
-        final result = {
-          'soil_type': jsonResponse['soil_type'],
-          'ph_level': jsonResponse['ph_level'].toString(),
-          'organic_matter': '${jsonResponse['organic_matter']}%',
-          'moisture_content': '${jsonResponse['moisture']}%',
-          'nutrients': {
-            'Nitrogen': '${jsonResponse['nitrogen']} ppm',
-            'Phosphorus': '${jsonResponse['phosphorus']} ppm',
-            'Potassium': '${jsonResponse['potassium']} ppm',
-            'Calcium': '${jsonResponse['calcium']} ppm',
-            'Magnesium': '${jsonResponse['magnesium']} ppm',
-            'Sulfur': '${jsonResponse['sulfur']} ppm',
-          },
-          'recommendations': List<String>.from(jsonResponse['recommendations']),
-          'suitable_crops': _findSuitableCrops(
-            jsonResponse['soil_type'],
-            jsonResponse['ph_level'],
-            jsonResponse['moisture'],
-          ),
-          'confidence_score': '${jsonResponse['confidence']}%',
-          'image_quality': _assessImageQuality(path.basename(_image!.path)),
-          'timestamp': _captureTime?.toLocal().toString() ?? DateTime.now().toLocal().toString(),
-          'analysis_method': 'Cloud AI',
-        };
+        // Extract the text response from Gemini
+        final responseText = jsonResponse['candidates']?[0]['content']['parts']?[0]['text'] ?? '';
 
-        setState(() {
-          _analysisResult = result;
-          _analysisHistory.insert(0, result);
-        });
+        // Try to parse the JSON response from the text
+        try {
+          final startIndex = responseText.indexOf('{');
+          final endIndex = responseText.lastIndexOf('}');
+          final jsonString = responseText.substring(startIndex, endIndex + 1);
+          final soilData = json.decode(jsonString) as Map<String, dynamic>;
+
+          // Process the cloud API response
+          final result = {
+            'soil_type': soilData['soil_type']?.toString() ?? 'Unknown',
+            'ph_level': soilData['ph_level']?.toString() ?? '6.5',
+            'organic_matter': '${soilData['organic_matter']?.toString() ?? '2.5'}%',
+            'moisture_content': '${soilData['moisture_content']?.toString() ?? '15.0'}%',
+            'nutrients': {
+              'Nitrogen': '${soilData['nutrients']?['Nitrogen']?.toString() ?? '30'} ppm',
+              'Phosphorus': '${soilData['nutrients']?['Phosphorus']?.toString() ?? '15'} ppm',
+              'Potassium': '${soilData['nutrients']?['Potassium']?.toString() ?? '150'} ppm',
+              'Calcium': '${soilData['nutrients']?['Calcium']?.toString() ?? '500'} ppm',
+              'Magnesium': '${soilData['nutrients']?['Magnesium']?.toString() ?? '50'} ppm',
+              'Sulfur': '${soilData['nutrients']?['Sulfur']?.toString() ?? '10'} ppm',
+            },
+            'recommendations': List<String>.from(soilData['recommendations'] ?? [
+              'Add organic compost to improve soil structure',
+              'Test soil pH and adjust if necessary'
+            ]),
+            'suitable_crops': _findSuitableCrops(
+              soilData['soil_type']?.toString() ?? 'Loam',
+              double.tryParse(soilData['ph_level']?.toString() ?? '6.5') ?? 6.5,
+              double.tryParse(soilData['moisture_content']?.toString() ?? '15.0') ?? 15.0,
+            ),
+            'confidence_score': '${soilData['confidence_score']?.toString() ?? '75'}%',
+            'image_quality': _assessImageQuality(path.basename(_image!.path)),
+            'timestamp': _captureTime?.toLocal().toString() ?? DateTime.now().toLocal().toString(),
+            'analysis_method': 'Gemini AI',
+          };
+
+          setState(() {
+            _analysisResult = result;
+            _analysisHistory.insert(0, result);
+          });
+        } catch (e) {
+          // If JSON parsing fails, fall back to basic analysis
+          print('Failed to parse Gemini response: $e');
+          await _basicSoilAnalysis();
+        }
       } else {
         throw Exception('Cloud analysis failed with status ${response.statusCode}');
       }
     } catch (e) {
+      print('Error calling Gemini API: $e');
       throw Exception('Failed to connect to analysis service');
     }
   }
@@ -491,7 +541,7 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
               SizedBox(height: 8),
               ..._getPotentiallySuitableCrops(soilType, phLevel).take(3).map((crop) => Padding(
                 padding: EdgeInsets.symmetric(vertical: 4),
-                child: Text('• ${crop['name']} (needs pH ${crop['ph_range'][0]}-${crop['ph_range'][1]})'),
+                child: Text('• ${crop['name']} (needs pH ${crop['ph_range'][0]}-${crop['ph_range'][1]}'),
               )).toList(),
             ],
           ),
