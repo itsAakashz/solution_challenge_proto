@@ -7,6 +7,124 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:http_parser/http_parser.dart';
 
+class AgriculturalLoading extends StatefulWidget {
+  final String message;
+
+  const AgriculturalLoading({Key? key, required this.message}) : super(key: key);
+
+  @override
+  _AgriculturalLoadingState createState() => _AgriculturalLoadingState();
+}
+
+class _AgriculturalLoadingState extends State<AgriculturalLoading>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _rotationAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+
+    _scaleAnimation = Tween<double>(begin: 0.9, end: 1.1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _rotationAnimation = Tween<double>(begin: 0, end: 2 * pi).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.linear,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: _scaleAnimation.value,
+                child: Transform.rotate(
+                  angle: _rotationAnimation.value,
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          Colors.green[100]!,
+                          Colors.green[400]!,
+                        ],
+                        stops: [0.4, 1.0],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.green.withOpacity(0.3),
+                          blurRadius: 15,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.grass,
+                        size: 50,
+                        color: Colors.green[800],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          SizedBox(height: 20),
+          Text(
+            widget.message,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.green[800],
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Analyzing soil composition...',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: 16),
+          LinearProgressIndicator(
+            backgroundColor: Colors.green[100],
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.green[700]!),
+            minHeight: 6,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class SoilLensScreen extends StatefulWidget {
   @override
   _SoilLensScreenState createState() => _SoilLensScreenState();
@@ -859,21 +977,8 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
               ),
               SizedBox(height: 20),
               if (_isLoading)
-                Column(
-                  children: [
-                    CircularProgressIndicator(
-                      color: Colors.green[700],
-                      strokeWidth: 3,
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      "Analyzing soil composition...",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
+                AgriculturalLoading(
+                  message: 'Scanning Soil Sample',
                 ),
               if (_errorMessage.isNotEmpty)
                 Padding(
