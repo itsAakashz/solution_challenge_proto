@@ -152,87 +152,896 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
 
   // Enhanced crop database with more detailed soil preferences
   final List<Map<String, dynamic>> _cropDatabase = [
+  // ========== Grains (15) ==========
+  {
+  'name': 'Wheat',
+  'suitable_soil': ['Loam', 'Clay Loam', 'Silty Loam'],
+  'ph_range': [6.0, 7.5],
+  'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'High', 'Potassium': 'Medium'},
+  'moisture_preference': 'Medium',
+  'description': 'Staple cereal crop grown worldwide'
+},
+{
+'name': 'Rice',
+'suitable_soil': ['Clay', 'Clay Loam', 'Silty Clay'],
+'ph_range': [5.0, 6.5],
+'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'High',
+'description': 'Primary staple for half the world'
+},
+{
+'name': 'Corn (Maize)',
+'suitable_soil': ['Loam', 'Sandy Loam', 'Silty Loam'],
+'ph_range': [5.8, 7.0],
+'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Versatile cereal grain'
+},
+{
+'name': 'Barley',
+'suitable_soil': ['Loam', 'Clay Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Used for food, feed and brewing'
+},
+{
+'name': 'Oats',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [5.5, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Nutritious breakfast cereal'
+},
+{
+'name': 'Rye',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [5.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Low',
+'description': 'Cold-tolerant cereal grain'
+},
+{
+'name': 'Millet',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Low',
+'description': 'Drought-resistant small grain'
+},
+{
+'name': 'Sorghum',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [5.5, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Low',
+'description': 'Heat-tolerant cereal crop'
+},
+{
+'name': 'Quinoa',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Low',
+'description': 'Nutritious pseudo-cereal'
+},
+{
+'name': 'Buckwheat',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [5.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Fast-growing pseudo-cereal'
+},
+{
+'name': 'Fonio',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [5.0, 6.5],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Low',
+'description': 'Ancient African grain'
+},
+{
+'name': 'Teff',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Tiny nutritious grain'
+},
+{
+'name': 'Amaranth',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'High-protein pseudo-cereal'
+},
+{
+'name': 'Spelt',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Ancient wheat variety'
+},
+{
+'name': 'Triticale',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Wheat-rye hybrid grain'
+},
+
+// ========== Legumes (12) ==========
     {
-      'name': 'Wheat',
-      'suitable_soil': ['Loam', 'Clay Loam', 'Silty Loam'],
-      'ph_range': [6.0, 7.5],
-      'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'High', 'Potassium': 'Medium'},
-      'moisture_preference': 'Medium',
-      'description': 'Best grown in well-drained loamy soils with good water retention'
-    },
+'name': 'Soybeans',
+'suitable_soil': ['Loam', 'Sandy Loam', 'Clay Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Important protein and oil source'
+},
+{
+'name': 'Lentils',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Low',
+'description': 'Nutritious pulse crop'
+},
+{
+'name': 'Chickpeas',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Low',
+'description': 'Versatile legume for hummus'
+},
+{
+'name': 'Black Beans',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Protein-rich staple bean'
+},
+{
+'name': 'Kidney Beans',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Popular in chili dishes'
+},
+{
+'name': 'Pinto Beans',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Common in Mexican cuisine'
+},
+{
+'name': 'Navy Beans',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Small white beans for baking'
+},
+{
+'name': 'Lima Beans',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Butter beans with creamy texture'
+},
+{
+'name': 'Fava Beans',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Broad beans popular in Mediterranean'
+},
+{
+'name': 'Peas',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Cool-season legume vegetable'
+},
+{
+'name': 'Peanuts',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [5.5, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Low',
+'description': 'Groundnut that grows underground'
+},
+{
+'name': 'Pigeon Peas',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [5.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Low',
+'description': 'Drought-resistant tropical legume'
+},
+
+// ========== Vegetables (30) ==========
     {
-      'name': 'Rice',
-      'suitable_soil': ['Clay', 'Clay Loam', 'Silty Clay'],
-      'ph_range': [5.0, 6.5],
-      'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
-      'moisture_preference': 'High',
-      'description': 'Requires heavy soils with good water retention capacity'
-    },
+'name': 'Tomatoes',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [6.0, 6.8],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Versatile fruiting vegetable'
+},
+{
+'name': 'Potatoes',
+'suitable_soil': ['Sandy Loam', 'Loam', 'Silt'],
+'ph_range': [4.8, 6.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Starchy tuber staple'
+},
+{
+'name': 'Onions',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Bulb vegetable with strong flavor'
+},
+{
+'name': 'Carrots',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [5.5, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Root vegetable rich in beta-carotene'
+},
+{
+'name': 'Cabbage',
+'suitable_soil': ['Loam', 'Clay Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Leafy green vegetable head'
+},
+{
+'name': 'Cauliflower',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Edible white flower head'
+},
+{
+'name': 'Broccoli',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Nutritious green flower heads'
+},
+{
+'name': 'Bell Peppers',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [6.0, 6.8],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Sweet colorful capsicums'
+},
+{
+'name': 'Eggplant',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [5.5, 6.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Purple fruiting vegetable'
+},
+{
+'name': 'Cucumber',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [5.5, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Refreshing salad vegetable'
+},
+{
+'name': 'Zucchini',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Summer squash variety'
+},
+{
+'name': 'Pumpkin',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Winter squash for pies and soups'
+},
+{
+'name': 'Squash',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Versatile gourd vegetable'
+},
+{
+'name': 'Spinach',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Nutrient-dense leafy green'
+},
+{
+'name': 'Kale',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Superfood leafy vegetable'
+},
+{
+'name': 'Lettuce',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'High',
+'description': 'Salad green with many varieties'
+},
+{
+'name': 'Okra',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Mucilaginous pod vegetable'
+},
+{
+'name': 'Radish',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Fast-growing root vegetable'
+},
+{
+'name': 'Beetroot',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Sweet red root vegetable'
+},
+{
+'name': 'Turnip',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Dual-purpose root and greens'
+},
+{
+'name': 'Garlic',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Pungent bulb for flavoring'
+},
+{
+'name': 'Leek',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Mild-flavored allium'
+},
+{
+'name': 'Celery',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Crisp stalk vegetable'
+},
+{
+'name': 'Asparagus',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [6.5, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Perennial spring vegetable'
+},
+{
+'name': 'Artichoke',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.5, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Edible flower bud vegetable'
+},
+{
+'name': 'Brussels Sprouts',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Mini cabbage-like vegetables'
+},
+{
+'name': 'Collards',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Nutritious leafy greens'
+},
+{
+'name': 'Endive',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Bitter salad green'
+},
+{
+'name': 'Fennel',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Anise-flavored bulb vegetable'
+},
+{
+'name': 'Kohlrabi',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Stem vegetable with bulbous base'
+},
+{
+'name': 'Parsnip',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Sweet root vegetable'
+},
+
+// ========== Fruits (20) ==========
     {
-      'name': 'Corn (Maize)',
-      'suitable_soil': ['Loam', 'Sandy Loam', 'Silty Loam'],
-      'ph_range': [5.8, 7.0],
-      'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'High'},
-      'moisture_preference': 'Medium',
-      'description': 'Prefers well-drained, fertile soils with good organic matter'
-    },
+'name': 'Bananas',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [5.5, 7.0],
+'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Tropical herbaceous plant'
+},
+{
+'name': 'Apples',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [5.5, 6.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Temperate tree fruit'
+},
+{
+'name': 'Oranges',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Citrus fruit rich in vitamin C'
+},
+{
+'name': 'Grapes',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [5.5, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Low',
+'description': 'Vine fruit for eating and wine'
+},
+{
+'name': 'Strawberries',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [5.5, 6.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Popular berry fruit'
+},
+{
+'name': 'Blueberries',
+'suitable_soil': ['Sandy Loam', 'Peat'],
+'ph_range': [4.5, 5.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Antioxidant-rich berries'
+},
+{
+'name': 'Raspberries',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [5.5, 6.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Delicate aggregate fruit'
+},
+{
+'name': 'Blackberries',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [5.5, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Sweet-tart bramble fruit'
+},
+{
+'name': 'Peaches',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Juicy stone fruit'
+},
+{
+'name': 'Pears',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Sweet temperate fruit'
+},
+{
+'name': 'Plums',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Juicy stone fruit with many varieties'
+},
+{
+'name': 'Cherries',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Small stone fruit for fresh eating'
+},
+{
+'name': 'Mangoes',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [5.5, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Tropical stone fruit'
+},
+{
+'name': 'Pineapples',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [4.5, 6.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Tropical bromeliad fruit'
+},
+{
+'name': 'Papayas',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Tropical fruit with digestive enzymes'
+},
+{
+'name': 'Avocados',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [6.0, 6.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Creamy nutrient-dense fruit'
+},
+{
+'name': 'Guavas',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [5.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Tropical fruit high in vitamin C'
+},
+{
+'name': 'Pomegranates',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [5.5, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Juicy arils in tough rind'
+},
+{
+'name': 'Figs',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Sweet Mediterranean fruit'
+},
+{
+'name': 'Dates',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [8.0, 10.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Low',
+'description': 'Sweet desert palm fruit'
+},
+
+// ========== Commercial Crops (15) ==========
     {
-      'name': 'Potatoes',
-      'suitable_soil': ['Sandy Loam', 'Loam', 'Silt'],
-      'ph_range': [4.8, 6.5],
-      'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
-      'moisture_preference': 'Medium',
-      'description': 'Grows best in loose, well-drained soils with good aeration'
-    },
+'name': 'Cotton',
+'suitable_soil': ['Sandy Loam', 'Loam', 'Clay Loam'],
+'ph_range': [5.5, 7.0],
+'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Fiber crop for textiles'
+},
+{
+'name': 'Coffee',
+'suitable_soil': ['Volcanic Loam', 'Sandy Loam'],
+'ph_range': [6.0, 6.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Popular beverage crop'
+},
+{
+'name': 'Tea',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [4.5, 5.5],
+'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'High',
+'description': 'Leaves for brewing beverages'
+},
+{
+'name': 'Cocoa',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [5.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Source of chocolate'
+},
+{
+'name': 'Sugarcane',
+'suitable_soil': ['Clay Loam', 'Silty Clay Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Tall grass for sugar production'
+},
+{
+'name': 'Tobacco',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [5.5, 6.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Leaves for smoking products'
+},
+{
+'name': 'Rubber',
+'suitable_soil': ['Clay Loam', 'Loam'],
+'ph_range': [4.5, 6.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Latex-producing tree'
+},
+{
+'name': 'Jute',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Golden fiber crop'
+},
+{
+'name': 'Hemp',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Versatile industrial crop'
+},
+{
+'name': 'Flax',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Source of linen fiber'
+},
+{
+'name': 'Sisal',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Low', 'Potassium': 'Medium'},
+'moisture_preference': 'Low',
+'description': 'Hard fiber for ropes'
+},
+{
+'name': 'Kenaf',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Fast-growing fiber crop'
+},
+{
+'name': 'Coconut',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [5.0, 8.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Tropical palm with multiple uses'
+},
+{
+'name': 'Oil Palm',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [4.5, 6.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Source of palm oil'
+},
+{
+'name': 'Castor',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [5.0, 6.5],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Low',
+'description': 'Oilseed crop for industrial use'
+},
+{
+'name': 'Sunflower',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'Medium'},
+'moisture_preference': 'Low-Medium',
+'description': 'Oilseed crop with edible seeds'
+},
+
+// ========== Nuts and Seeds (8) ==========
     {
-      'name': 'Tomatoes',
-      'suitable_soil': ['Loam', 'Sandy Loam'],
-      'ph_range': [6.0, 6.8],
-      'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
-      'moisture_preference': 'Medium',
-      'description': 'Thrives in well-drained soils rich in organic matter'
-    },
+'name': 'Almonds',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Low',
+'description': 'Nutritious tree nut'
+},
+{
+'name': 'Walnuts',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Hard-shelled nut'
+},
+{
+'name': 'Cashews',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [5.5, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Low',
+'description': 'Tropical kidney-shaped nut'
+},
+{
+'name': 'Pistachios',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [7.0, 7.8],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Low',
+'description': 'Green-hued dessert nut'
+},
+{
+'name': 'Pecans',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Buttery-flavored nut'
+},
+{
+'name': 'Hazelnuts',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [6.0, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Round nut for confectionery'
+},
+{
+'name': 'Macadamias',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [5.5, 6.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Creamy tropical nut'
+},
+{
+'name': 'Chestnuts',
+'suitable_soil': ['Loam', 'Silty Loam'],
+'ph_range': [5.5, 6.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Starchy sweet nut'
+},
+
+// ========== Herbs and Spices (15) ==========
     {
-      'name': 'Barley',
-      'suitable_soil': ['Loam', 'Clay Loam', 'Silty Loam'],
-      'ph_range': [6.0, 7.5],
-      'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
-      'moisture_preference': 'Medium',
-      'description': 'Adaptable to various soils but prefers well-drained loams'
-    },
-    {
-      'name': 'Soybeans',
-      'suitable_soil': ['Loam', 'Sandy Loam', 'Clay Loam'],
-      'ph_range': [6.0, 7.0],
-      'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
-      'moisture_preference': 'Medium',
-      'description': 'Grows well in most soil types except very sandy or heavy clay'
-    },
-    {
-      'name': 'Cotton',
-      'suitable_soil': ['Sandy Loam', 'Loam', 'Clay Loam'],
-      'ph_range': [5.5, 7.0],
-      'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'Medium', 'Potassium': 'High'},
-      'moisture_preference': 'Medium',
-      'description': 'Prefers deep, well-drained soils with good water holding capacity'
-    },
-    {
-      'name': 'Carrots',
-      'suitable_soil': ['Sandy Loam', 'Loam'],
-      'ph_range': [5.5, 7.0],
-      'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
-      'moisture_preference': 'Medium',
-      'description': 'Requires loose, stone-free soil for proper root development'
-    },
-    {
-      'name': 'Cabbage',
-      'suitable_soil': ['Loam', 'Clay Loam', 'Silty Loam'],
-      'ph_range': [6.0, 7.5],
-      'nutrient_requirements': {'Nitrogen': 'High', 'Phosphorus': 'High', 'Potassium': 'High'},
-      'moisture_preference': 'High',
-      'description': 'Grows best in fertile, moisture-retentive soils'
-    },
-  ];
+'name': 'Basil',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Popular culinary herb'
+},
+{
+'name': 'Black Pepper',
+'suitable_soil': ['Clay Loam', 'Loam'],
+'ph_range': [5.5, 6.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Widely used spice'
+},
+{
+'name': 'Cinnamon',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [5.5, 7.0],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Medium',
+'description': 'Aromatic tree bark spice'
+},
+{
+'name': 'Turmeric',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [5.5, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Golden-colored rhizome spice'
+},
+{
+'name': 'Ginger',
+'suitable_soil': ['Loam', 'Sandy Loam'],
+'ph_range': [5.5, 6.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'High', 'Potassium': 'High'},
+'moisture_preference': 'Medium',
+'description': 'Pungent rhizome spice'
+},
+{
+'name': 'Cardamom',
+'suitable_soil': ['Loam', 'Clay Loam'],
+'ph_range': [5.0, 6.5],
+'nutrient_requirements': {'Nitrogen': 'Medium', 'Phosphorus': 'Medium', 'Potassium': 'High'},
+'moisture_preference': 'High',
+'description': 'Aromatic seed pods'
+},
+{
+'name': 'Cumin',
+'suitable_soil': ['Sandy Loam', 'Loam'],
+'ph_range': [6.0, 7.5],
+'nutrient_requirements': {'Nitrogen': 'Low', 'Phosphorus': 'Medium', 'Potassium': 'Medium'},
+'moisture_preference': 'Low',
+'description': 'Earth''-toned seed spice'},
+];
+  // Example usage in Flutter
+  List<Map<String, dynamic>> getCropsBySoil(String soilType) {
+    return _cropDatabase.where((crop) =>
+        crop['suitable_soil'].contains(soilType)).toList();
+  }
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -281,6 +1090,8 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
       });
     }
   }
+
+
 
   Future<void> _analyzeWithCloudAI() async {
     final apiKey = "AIzaSyBX55Wxz61k-TpRhcuLyOGr8vU2PdFeS1Q";
@@ -1120,6 +1931,7 @@ class _SoilLensScreenState extends State<SoilLensScreen> {
           ),
         ),
       ),
+
     );
   }
 }
