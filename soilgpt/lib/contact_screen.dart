@@ -77,7 +77,7 @@ class ContactScreen extends StatelessWidget {
                     icon: Icons.language_rounded,
                     text: 'Visit Website',
                     color: Colors.green.shade700,
-                    onTap: () => _launchURL('https://github.com/itsAakashz/solution_challenge_proto'),
+                    onTap: () => _launchURL('https://soilgpt.me/'),
                   ),
 
                   const SizedBox(height: 25),
@@ -93,9 +93,9 @@ class ContactScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildSocialButton(Icons.facebook_rounded, Colors.blueAccent, '#'),
-                      _buildSocialButton(Icons.camera_alt_rounded, Colors.redAccent, '#'),
-                      _buildSocialButton(Icons.alternate_email_rounded, Colors.lightBlueAccent, '#'),
+                      _buildSocialButton(Icons.facebook_rounded, Colors.blueAccent, 'https://soilgpt.me/'),
+                      _buildSocialButton(Icons.camera_alt_rounded, Colors.redAccent, 'https://soilgpt.me/'),
+                      _buildSocialButton(Icons.alternate_email_rounded, Colors.lightBlueAccent, 'https://soilgpt.me/'),
                     ],
                   ),
 
