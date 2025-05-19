@@ -10,6 +10,7 @@ import 'package:SoilGPT/mandi_screen.dart';
 import 'dart:convert';
 import 'package:SoilGPT/farmTube/video_feed_screen.dart';
 import 'package:SoilGPT/agriEdu/agriEdu_screen.dart';
+import 'package:SoilGPT/weather_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -32,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   final ScrollController _scrollController = ScrollController();
   late AnimationController _animationController;
   late Animation<double> _animation;
+  Map<String, dynamic> weatherData = {};
 
   @override
   void initState() {
@@ -346,6 +348,27 @@ Note: Provide all recommendations in metric units. Include specific varieties su
               ),
             ),
             _buildDrawerItem(Icons.home, 'Home', () => Navigator.pop(context)),
+            _buildDrawerItem(Icons.cloud, 'Weather', () {
+              if (savedLocation != null && savedLocation!.isNotEmpty) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => WeatherScreen(
+                      location: savedLocation!,
+                      weatherData: weatherData,
+                    ),
+                  ),
+                );
+              } else {
+                _showLocationDialog();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Please set your location first'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            }),
             _buildDrawerItem(Icons.cast_for_education, 'AgriEdu',
                     () => Navigator.push(context, MaterialPageRoute(builder: (context) => AgriEduScreen()))),
             _buildDrawerItem(Icons.camera_alt, 'Soil Lens',
